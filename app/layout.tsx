@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './catalog.css';
 import { Account, ReadingTools } from './shared';
 import { Toaster } from '@/components/ui/sonner';
 export const metadata: Metadata = {title:'ChatGPT 使用手册 · 开放教程',description:'阅读 ChatGPT 与 Codex 实践教程，分享问题、经验和改进建议。'};

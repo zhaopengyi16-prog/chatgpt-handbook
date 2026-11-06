@@ -1,0 +1,26 @@
+.tax-panel,.tax-tags,.tax-form,.tax-tags fieldset {min-width:0}
+.tax-panel,.tax-tags,.tax-form {display:grid;gap:1rem}
+.tax-panel .section-heading,.tax-panel .chapter-row,.tax-panel .tax-form,.tax-tags .field {margin:0}
+.tax-policy,.tax-level {width:min(100%,28rem)}
+.tax-panel .row-actions,.tax-choices {display:flex;flex-wrap:wrap;gap:.5rem}
+.tax-panel .grow {min-width:0;overflow-wrap:anywhere}
+.tax-panel .chapter-row .grow>small {display:block}
+.tax-panel details summary,.tax-comparison summary {cursor:pointer}
+.tax-panel details ul {margin:.5rem 0;padding-inline-start:1.3rem}
+.tax-tags {margin:1rem 0}
+.tax-tags h2,.tax-panel h3,.tax-tags p,.tax-tags fieldset {margin:0}
+.tax-tags fieldset {border:0;padding:0}
+.tax-tags legend {padding:0;margin-bottom:.4rem;font-weight:600}
+.tax-tags small {font-weight:400;color:#72727a}
+.tax-choices label {display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .65rem;border:1px solid #e6e6e9;border-radius:.5rem;cursor:pointer}
+.tax-choices input {width:1rem;height:1rem;flex:none}
+.tax-form textarea,.tax-raw {width:100%;min-height:5rem}
+.tax-comparison {margin:1rem 0;scroll-margin-top:6rem}
+@media(max-width:640px){.tax-panel .section-heading,.tax-panel .chapter-row {align-items:stretch;flex-direction:column}.tax-panel .section-heading>.row-actions {margin:0}.tax-panel .chapter-row {gap:.5rem}}
+
+/* The legacy theme sets a dark color on every button outside Tailwind's layers.
+   Pair foreground and background here for this workspace's primary actions. */
+.tax-panel button[data-variant="default"] {background:#252529;color:#fff}
+.tax-panel button[data-variant="default"]:hover:not(:disabled) {background:#444449}
+.tax-panel button[aria-pressed="true"] {font-weight:650}
+.tax-comparison .row-actions button,.tax-form button {white-space:normal;height:auto;min-height:2.25rem}
