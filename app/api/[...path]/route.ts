@@ -4,6 +4,9 @@ import { guestIdentity, guestCookie, allowGuestSubmission } from '@/lib/guests';
 import { cleanHtml, CATEGORIES } from '@/lib/content';
 import { addedLegacyImageReferences, publicChapterHtml } from '@/lib/legacy-images';
 import { isLegacyImageUrl } from '@/lib/legacy-image-url';
+import { adminTaxonomy, mutateTaxonomy, readTaxonomy, TaxonomyError } from '@/lib/taxonomy';
+import { TAXONOMY_KEY } from '@/lib/taxonomy-types';
+import { adminChaptersWithTags, saveChapterWithTags } from '@/lib/chapter-taxonomy-write';
 export const dynamic = 'force-dynamic';
 class HttpError extends Error { constructor(public status:number, message:string) { super(message); } }
 function fail(status:number,message:string): never { throw new HttpError(status,message); }
@@ -29,7 +32,9 @@ async function handle(req:Request, parts:string[]) {
   // These read paths still pass all existing identity and permission checks.
   const readerIdentity = parts.length===1 && parts[0]==='me' && method==='GET';
   const readerMedia = parts.length===2 && parts[0]==='media' && method==='GET';
-  if(!readerPreview && !readerIdentity && !readerMedia) await ensureSeed();
+  // The taxonomy initializer checks the existing v14 baseline; never replay old releases here.
+  const taxonomyPath = adminPath && parts[1]==='taxonomy';
+  if(!readerPreview && !readerIdentity && !readerMedia && !taxonomyPath) await ensureSeed();
   const user=await identity();
   if(adminPath && !user?.admin) fail(user?403:401,'请使用站点所有者账号登录后台。');
   const guestPost = !user && !adminPath && method==='POST' && parts.length===1 && ['topics','replies'].includes(parts[0]);
@@ -50,11 +55,23 @@ async function handle(req:Request, parts:string[]) {
     if(!user) { const cookie=await guestCookie(req); if(cookie) response.headers.set('Set-Cookie',cookie); }
     return response;
   }
-  if(parts[0]==='chapters' && method==='GET') return json({items:await publicChapters()});
+  if(parts[0]==='chapters' && parts.length===1 && method==='GET') return json({items:await publicChapters()});
+  if(taxonomyPath && parts.length===2) {
+    if(method==='GET') return json(adminTaxonomy(await readTaxonomy(db)));
+    if(method==='POST' || method==='PUT') return json(await mutateTaxonomy(db,method,body));
+    if(method==='DELETE') {
+      const params=url.searchParams;
+      if(req.body || [...params.keys()].length!==3 || !['group','id','revision'].every(k=>params.has(k))) fail(400,'删除分类只接受 group、id、revision 三个查询参数。');
+      const revision=params.get('revision')!;
+      if(!/^[1-9][0-9]*$/.test(revision) || !Number.isSafeInteger(Number(revision))) fail(400,'分类版本无效。');
+      return json(await mutateTaxonomy(db,'DELETE',{group:params.get('group'),id:params.get('id'),expectedRevision:Number(revision)}));
+    }
+    fail(405,'分类接口不支持此方法。');
+  }
   if(readerPreview) return json({html:publicChapterHtml(text(body.body,500000,true),url.origin)});
   if(adminPath && parts[1]==='chapters') {
     const id=parts[2];
-    if(method==='GET') return json({items:(await db.prepare('SELECT * FROM chapters ORDER BY position,id').all()).results});
+    if(method==='GET') return json({items:await adminChaptersWithTags(db)});
     if(method==='POST' && !id) {
       const newId=identifier(body.id);
       if(await db.prepare('SELECT id FROM chapters WHERE id=?').bind(newId).first()) fail(409,'编号已存在，请换一个编号。');
@@ -72,16 +89,14 @@ async function handle(req:Request, parts:string[]) {
         const title=text(body.title,120), description=text(body.description||'',500,true), html=cleanHtml(text(body.body,500000)), position=number(body.position,1);
         if(row.version!==version||row.deleted_at!==null) fail(409,'该章节已在另一窗口更新，请保留本页内容，刷新列表后重新打开。');
         assertLegacyReferencesNotAdded(row.body,html,url.origin);
-        result= action==='publish'
-          ? await db.prepare('UPDATE chapters SET title=?,description=?,body=?,position=?,published_title=?,published_description=?,published_body=?,published_position=?,published_at=?,updated_at=?,version=version+1 WHERE id=? AND version=? AND deleted_at IS NULL').bind(title,description,html,position,title,description,html,position,now,now,id,version).run()
-          : await db.prepare('UPDATE chapters SET title=?,description=?,body=?,position=?,updated_at=?,version=version+1 WHERE id=? AND version=? AND deleted_at IS NULL').bind(title,description,html,position,now,id,version).run();
+        result=await saveChapterWithTags(db,{id,version,publish:action==='publish',title,description,html,position,now,tags:body.tags,expectedRevision:body.expectedRevision});
       } else if(action==='unpublish') {
         result=await db.prepare('UPDATE chapters SET published_body=NULL,published_at=NULL,updated_at=?,version=version+1 WHERE id=? AND version=?').bind(now,id,version).run();
       } else if(action==='restore') {
         result=await db.prepare('UPDATE chapters SET deleted_at=NULL,published_body=NULL,published_at=NULL,updated_at=?,version=version+1 WHERE id=? AND version=?').bind(now,id,version).run();
       } else fail(400,'操作无效。');
       if(!result.meta.changes) fail(409,'该章节已在另一窗口更新，请保留本页内容，刷新列表后重新打开。');
-      return json({item:await db.prepare('SELECT * FROM chapters WHERE id=?').bind(id).first()});
+      return json({item:(await adminChaptersWithTags(db,id))[0]});
     }
     if(method==='DELETE') {
       const expected=Number(url.searchParams.get('version'));
@@ -127,7 +142,10 @@ async function handle(req:Request, parts:string[]) {
   }
   if(adminPath && parts[1]==='export' && method==='GET') {
     const contentBackups=(await db.prepare("SELECT key,value FROM settings WHERE key LIKE 'content_backup:%' ORDER BY key").all()).results.map((r:any)=>({key:r.key,chapter:JSON.parse(r.value)}));
-    const data={format:'handbook-backup-v1',exportedAt:now,contentBackups,chapters:(await db.prepare('SELECT * FROM chapters').all()).results,media:(await db.prepare('SELECT * FROM media').all()).results,topics:(await db.prepare('SELECT * FROM topics').all()).results,replies:(await db.prepare('SELECT * FROM replies').all()).results};
+    const setting=await db.prepare('SELECT value FROM settings WHERE key=?').bind(TAXONOMY_KEY).first<{value:string}>();
+    let taxonomyBackup:unknown=null;
+    if(setting) { try { taxonomyBackup=JSON.parse(setting.value); } catch { taxonomyBackup=setting.value; } }
+    const data={format:'handbook-backup-v1',exportedAt:now,[TAXONOMY_KEY]:taxonomyBackup,contentBackups,chapters:(await db.prepare('SELECT * FROM chapters').all()).results,media:(await db.prepare('SELECT * FROM media').all()).results,topics:(await db.prepare('SELECT * FROM topics').all()).results,replies:(await db.prepare('SELECT * FROM replies').all()).results};
     return new Response(JSON.stringify(data,null,2),{headers:{'Content-Type':'application/json; charset=utf-8','Content-Disposition':'attachment; filename="handbook-backup.json"','Cache-Control':'no-store'}});
   }
   if(adminPath && parts[1]==='review') {
@@ -252,7 +270,7 @@ async function handle(req:Request, parts:string[]) {
   }
   fail(404,'接口不存在。');
  } catch(e) {
-   if(e instanceof HttpError) return json({error:e.message},e.status);
+   if(e instanceof TaxonomyError || e instanceof HttpError) return json({error:e.message},e.status);
    console.error('HANDBOOK_API_FAILURE',e instanceof Error?e.name:'Unknown');
    return json({error:'暂时无法完成操作，请保留输入并稍后重试。'},503);
  }

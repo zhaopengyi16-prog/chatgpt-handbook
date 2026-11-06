@@ -1,0 +1,53 @@
+/* Public directory additions reuse the handbook's neutral surfaces and typography. */
+.learning-catalog .catalog-intro{margin-bottom:36px}
+.learning-catalog .catalog-intro .home-label{margin-bottom:12px}
+.learning-catalog .catalog-intro h1{margin-bottom:10px}
+.catalog-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(235px,29%);gap:28px;align-items:start}
+.catalog-scope>.catalog-filters{grid-column:2;grid-row:1}
+.catalog-scope>div{grid-column:1;grid-row:1}
+.learning-catalog .section-heading{align-items:baseline;flex-direction:row}
+.learning-catalog .section-heading h2{margin:0}
+.catalog-layout .section-heading{margin-top:0}
+.catalog-scenes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.catalog-scene{display:block;overflow-wrap:anywhere}
+.catalog-scene:hover,.catalog-scene:focus-visible{background:var(--soft)}
+.catalog-scene h3{font-size:1.18rem;margin:16px 0 4px}
+.catalog-scene p,.catalog-news p{color:#64646b;font-size:1rem;line-height:1.65;margin:0}
+.catalog-scene-top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#65656b;font-size:.82rem}
+.catalog-icon{display:grid;place-items:center;background:#f4f4f6;border-radius:10px;color:var(--ink);height:38px;width:38px}
+.catalog-tool-index,.catalog-crumb,.catalog-card-tags{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
+.catalog-tool-index{margin-top:16px;font-size:.88rem}
+.catalog-tool-index>span,.catalog-crumb,.catalog-card-tags{color:#64646b}
+.catalog-tool-index a,.catalog-crumb a,.catalog-text-link{text-decoration:underline;text-underline-offset:3px}
+.catalog-text-link{font-size:.9rem}
+.catalog-crumb{font-size:.9rem;margin-bottom:20px}
+.catalog-card-tags{margin-top:8px;font-size:.85rem;gap:6px}
+.catalog-card-tags .badge{margin:0}
+.catalog-filters h2,.catalog-news h2{font-size:1.15rem;margin:0 0 12px}
+.catalog-filters fieldset{margin:0;padding:0;border:0;min-width:0}
+.catalog-filters legend,.catalog-level{font-size:.95rem;font-weight:600}
+.catalog-filters small{color:#65656b;font-size:.78rem;font-weight:400}
+.catalog-choice-list{display:flex;flex-wrap:wrap;gap:4px 15px;margin:6px 0 12px}
+.catalog-choice-list label{display:inline-flex;align-items:center;gap:8px;font-size:.94rem;cursor:pointer}
+.catalog-choice-list input{width:1rem;height:1rem;accent-color:#303034;flex:none}
+.catalog-level{display:grid;gap:4px}
+.catalog-level select{width:100%;font-weight:400;font-size:1rem;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:white}
+.catalog-filters .actions{margin:16px 0 0;align-items:center;gap:12px}
+.catalog-filters .button{padding:9px 14px}
+.catalog-news ul{margin:0 0 14px;padding:0;list-style:none}
+.catalog-news li{margin:4px 0;overflow-wrap:anywhere}
+.catalog-news li a:hover{text-decoration:underline}
+.catalog-news p{margin-bottom:12px}
+.catalog-chapter-tags{margin:0 0 24px;display:flex;gap:6px;flex-wrap:wrap}
+@media(max-width:760px){
+ .catalog-scope>.catalog-filters,.catalog-scope>div{grid-column:auto;grid-row:auto}
+ .catalog-layout{grid-template-columns:minmax(0,1fr);gap:20px}
+ .catalog-scenes{grid-template-columns:minmax(0,1fr)}
+ .learning-catalog .catalog-intro{margin-bottom:24px}
+ .catalog-scene,.catalog-filters{padding:18px}
+ .catalog-scene h3{margin-top:10px}
+ .catalog-tool-index{gap:4px 12px}
+ .learning-catalog .chapter-card{align-items:flex-start;gap:10px;padding:16px}
+ .learning-catalog .chapter-number{font-size:1rem;padding-top:2px}
+ .catalog-layout .section-heading{margin-top:0}
+}
