@@ -1,0 +1,41 @@
+import {Block,renderBlocks} from './blocks';
+
+// This is a template, never an automatic migration of the owner's live content.
+// The owner explicitly opens it in the CMS to create an independent draft.
+export const sampleBlocks:Block[]=[
+ {id:'first-task-purpose',kind:'note',title:'这一章要完成什么',text:'把一段零散的项目讨论整理成可核对的行动清单。你会走完一轮「提供材料 → 得到初稿 → 检查 → 修订」。不需要先记住所有功能，也不必把提示词写得很复杂。'},
+ {id:'first-task-method',kind:'text',text:'这份手册保留一个出发点：操作是为了把事情做成。示例只是帮助你理解方法；当你知道为什么这样做，就可以逐步形成自己的工作流程。先从一个范围小、结果好判断的任务开始。'},
+ {id:'first-task-prepare',kind:'heading',title:'01  准备一份你能判断对错的材料',level:2,anchor:'prepare'},
+ {id:'first-task-material-intro',kind:'text',text:'下面使用虚构的项目记录。它故意保留了未确定的时间和人员，因为整理工作不只是把话写漂亮，还要把不确定的地方留下来。第一次练习直接使用这份材料；熟悉后再换成你有权使用的真实内容。'},
+ {id:'first-task-material',kind:'prompt',title:'演示材料 · 项目例会记录',text:'某次项目例会记录（以下人名、项目均为虚构）：\n林青：周五前整理首页文案初稿，发到共享文档。\n陈序：拿到文案后检查页面是否溢出，大约需要半天；具体完成时间还没确认。\n大家提出可以加一个搜索入口，但要先评估，本次没有决定做，也没有分配负责人。\n周屿：需要检查手机上的阅读体验；谁负责、什么时候完成，下次再确认。\n会上没有确定网站上线日期。'},
+ {id:'first-task-private',kind:'note',title:'换成自己的材料时',text:'先去掉不影响任务的姓名、客户信息、内部地址和密钥。是否可以使用某份材料，要按它的授权范围判断。示例中的项目记录可以直接复制练习。'},
+ {id:'first-task-request',kind:'heading',title:'02  说清楚你要交付什么',level:2,anchor:'request'},
+ {id:'first-task-request-intro',kind:'text',text:'打开你能使用的 ChatGPT 对话入口，发送下面这段要求，并在末尾粘贴演示材料。本练习整理的是你提供的文字，不需要搜索外部信息。先使用当前可用的默认设置即可。'},
+ {id:'first-task-prompt',kind:'prompt',title:'第一次请求 · 可直接复制',text:'请把下面的项目例会记录整理成一份行动清单，供项目成员核对。\n\n请输出表格，包含：事项、状态、负责人、时间或依赖、待确认问题。\n只使用材料中的信息。没有确定的人员和日期写「待确认」，不要自行补齐。\n把已确定的任务、待评估的建议、尚未分配的事项区分开。\n最后单独列出需要我补充确认的问题。\n\n材料：\n[在这里粘贴演示材料]'},
+ {id:'first-task-reason',kind:'text',text:'这段要求交代了四件事：要做什么、根据什么做、交付成什么样、哪些地方不能擅自决定。你不必照抄这个句式；日常直接说明这些信息，通常比堆叠角色和口号更有用。'},
+ {id:'first-task-shot-input',kind:'screenshot',title:'截图 01 · 材料与请求',text:'展示同一次请求中的任务要求和例会记录，方便读者理解材料应放在哪里。',caption:'建议截取输入内容及其上下文，不必包含整个桌面。',src:''},
+ {id:'first-task-review',kind:'heading',title:'03  先核对事实，再看排版',level:2,anchor:'review'},
+ {id:'first-task-review-intro',kind:'text',text:'你得到的措辞和行数可能不同。下面是一份人工编写的核对参考，不是保证模型一定会给出的答案。判断标准是事实和不确定性是否被正确保留。'},
+ {id:'first-task-reference',kind:'table',headers:['事项','状态','负责人','时间或依赖','待确认问题'],rows:[['首页文案初稿','已确定','林青','周五前','「周五」对应的具体日期未给出'],['检查页面溢出','已确定','陈序','拿到文案后；约半天','具体完成时间'],['搜索入口','待评估的建议','待确认','待确认','是否实施、谁来评估'],['手机阅读体验检查','尚未分配','待确认','下次确认安排','负责人、完成时间']]},
+ {id:'first-task-checklist',kind:'list',items:[{title:'',text:'有没有把「建议增加搜索」写成已经决定开发？'},{title:'',text:'有没有把提出问题的周屿，误写成手机体验检查的负责人？'},{title:'',text:'有没有把「约半天」直接换成了一个具体截止日期？'},{title:'',text:'有没有编造上线日期，或者漏掉文案与页面检查之间的依赖？'}]},
+ {id:'first-task-verify',kind:'note',title:'让 AI 自查，可以辅助你；原始材料仍是判断依据',text:'你可以要求它逐项列出依据，但还要自己回到材料核对。回答自信、表格整齐，都不代表事实已经检查过。这个小练习里，最值得留意的正是那些看起来合理、原文却没有说的内容。'},
+ {id:'first-task-shot-result',kind:'screenshot',title:'截图 02 · 初稿与核对',text:'展示生成的行动清单，突出「待确认」字段和建议事项的状态。若初稿有错误，也可以展示错误以及你如何发现它。',caption:'截图用于对照操作，文字表格仍应保留，便于搜索和复制。',src:''},
+ {id:'first-task-revise',kind:'heading',title:'04  通过追问，把结果改到能用',level:2,anchor:'revise'},
+ {id:'first-task-revise-intro',kind:'text',text:'第一轮没有达到要求很常见。继续在同一任务中指出具体问题，说明依据和期望结果。下面两个追问分别用于纠错与调整格式，按你实际得到的结果选择使用。'},
+ {id:'first-task-correction',kind:'prompt',title:'如果它把建议当成了任务',text:'请重新核对「搜索入口」这一项：原文只说先评估，本次并未决定实施。\n请把它标为「待评估的建议」，负责人和时间保留「待确认」。\n同时检查其他行有没有把建议、发言人或耗时误写成已确定的任务、负责人或截止日期。\n修改后说明改了哪些地方，并给出对应的原文依据。'},
+ {id:'first-task-format',kind:'prompt',title:'事实正确后，再调整交付格式',text:'请保留已核对的事实，把结果整理为两部分：\n1. 可执行的行动清单。\n2. 待确认问题，按负责人、时间、是否实施分组。\n不要新增原始记录里没有的信息。请让表格适合直接复制到文档中。'},
+ {id:'first-task-shot-revise',kind:'screenshot',title:'截图 03 · 追问与修订',text:'在一张截图里展示一条明确的修改要求，以及结果中对应的变化。重点让读者看到迭代过程。',caption:'选取一次真实的修改过程即可，不需要把整段对话拼成长图。',src:''},
+ {id:'first-task-deliver',kind:'heading',title:'05  保存成果，并做一次交付检查',level:2,anchor:'deliver'},
+ {id:'first-task-deliver-steps',kind:'steps',items:[{title:'先保存一份可使用的结果',text:'把核对后的表格和待确认问题复制到你平时使用的文档。若当前工作入口支持生成文件，也可以明确要求所需格式；收到文件后打开检查内容与排版。'},{title:'用原始记录再检查一次',text:'确认事项没有遗漏，人物、时间和依赖没有被改写；仍待确定的内容要继续保留，不要为了让表格显得完整而补答案。'},{title:'留下下一步',text:'把需要他人确认的问题单独列出。本练习完成的是整理与核对，不意味着任务已经分配、消息已经发送或项目已经上线。'}]},
+ {id:'first-task-done',kind:'note',title:'完成标准',text:'你已经有一份与原始记录一致的行动清单，一份明确的待确认问题，以及一份自己打开检查过的成果。做到这里，这个任务就完成了；不必继续追求更长、更复杂的提示词。'},
+ {id:'first-task-choose',kind:'heading',title:'06  再认识入口：按任务选择工具',level:2,anchor:'choose-tools'},
+ {id:'first-task-choose-table',kind:'table',headers:['你现在想做什么','可以从哪里开始'],rows:[['问一个问题、讨论思路、整理一段文字','ChatGPT 对话；本章练习从这里即可开始'],['围绕材料完成文档、表格或其他可检查的成果','有 Work 入口时，可以明确交付目标并提供相关材料'],['处理代码、修改工程、运行检查与测试','有 Codex 入口时，可以从具体项目任务开始']]},
+ {id:'first-task-choose-note',kind:'text',text:'这些能力有交集，入口也会随你的账号、平台、地区和工作区设置变化。选择时先看任务需要什么材料、操作和结果，再看你当前能使用哪些能力。没有某个入口，不影响先完成本章的文字整理练习。'},
+ {id:'first-task-trouble',kind:'heading',title:'07  卡住时，先缩小问题',level:2,anchor:'troubleshooting'},
+ {id:'first-task-trouble-table',kind:'table',headers:['遇到的情况','下一步怎么做'],rows:[['它给了一大段总结，没有行动表','明确要求只输出指定表格和待确认问题，必要时先给一个空表头'],['它补了材料里没有的人或日期','指出那一项，要求给出原文依据；没有依据就改回「待确认」'],['同一段内容反复修改仍然混乱','把已经确认的事实和仍需调整的部分重新列清楚，再继续；不要让它根据模糊的「按之前说的改」猜测'],['生成的文件打不开或内容不全','要求重新导出；先保存可复制的正文，再检查文件是否真实包含所需内容']]},
+ {id:'first-task-next',kind:'text',text:'下一步，把演示材料换成你熟悉的一段学习笔记或项目记录，再做一次。你会逐渐知道：哪些背景必须提前说明，哪些问题适合边做边问，什么样的结果才算真正完成。下一章将把这些经验整理为「如何把需求交代清楚」。'},
+ {id:'first-task-sources',kind:'heading',title:'参考与更新',level:3,anchor:'sources'},
+ {id:'first-task-source1',kind:'link',title:'OpenAI 官方：Use ChatGPT',href:'https://learn.chatgpt.com/docs/use-chatgpt',text:'入口与能力说明。核对日期：2026-09-10。'},
+ {id:'first-task-source2',kind:'link',title:'OpenAI 官方：Get started with ChatGPT Work',href:'https://learn.chatgpt.com/docs/get-started-with-work',text:'按目标完成任务并检查成果。具体功能以账号实际可用情况为准。'},
+];
+export const sampleChapter={id:'first-task-sample',title:'先完成你的第一个任务',description:'用一段项目例会记录，练习清楚表达需求、核对事实与迭代修改。先做成一件小事，再建立自己的工作方法。',position:1,body:renderBlocks(sampleBlocks)};

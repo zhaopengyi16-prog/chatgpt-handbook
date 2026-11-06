@@ -1,0 +1,14 @@
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+export const settings = sqliteTable('settings', { key: text('key').primaryKey(), value: text('value').notNull() });
+export const chapters = sqliteTable('chapters', {
+  id: text('id').primaryKey(), title: text('title').notNull(), description: text('description').notNull(), body: text('body').notNull(),
+  position: integer('position').notNull(), publishedTitle: text('published_title'), publishedDescription: text('published_description'), publishedBody: text('published_body'), publishedPosition: integer('published_position'),
+  version: integer('version').notNull().default(1), updatedAt: text('updated_at').notNull(), publishedAt: text('published_at'), deletedAt: text('deleted_at'),
+});
+export const media = sqliteTable('media', { id: text('id').primaryKey(), name: text('name').notNull(), url: text('url').notNull(), caption: text('caption').notNull(), objectKey: text('object_key'), mime: text('mime').notNull(), createdAt: text('created_at').notNull() });
+export const guestLimits = sqliteTable('guest_limits', { key: text('key').primaryKey(), count: integer('count').notNull(), expiresAt: integer('expires_at').notNull() });
+export const topics = sqliteTable('topics', {
+  id: text('id').primaryKey(), title: text('title').notNull(), body: text('body').notNull(), category: text('category').notNull(), chapterId: text('chapter_id'), authorId: text('author_id').notNull(), authorName: text('author_name').notNull(), authorKind: text('author_kind').notNull().default('member'), moderationStatus: text('moderation_status').notNull().default('approved'),
+  pinned: integer('pinned').notNull().default(0), locked: integer('locked').notNull().default(0), hidden: integer('hidden').notNull().default(0), version: integer('version').notNull().default(1), createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull(),
+}, t => [index('idx_topics_review').on(t.moderationStatus, t.createdAt), index('idx_topics_public').on(t.hidden, t.pinned, t.updatedAt), index('idx_topics_chapter').on(t.chapterId), index('idx_topics_author_date').on(t.authorId, t.createdAt)]);
+export const replies = sqliteTable('replies', { id: text('id').primaryKey(), topicId: text('topic_id').notNull().references(() => topics.id, { onDelete: 'cascade' }), body: text('body').notNull(), authorId: text('author_id').notNull(), authorName: text('author_name').notNull(), authorKind: text('author_kind').notNull().default('member'), moderationStatus: text('moderation_status').notNull().default('approved'), version: integer('version').notNull().default(1), createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull() }, t => [index('idx_replies_review').on(t.moderationStatus, t.createdAt), index('idx_replies_topic').on(t.topicId, t.createdAt), index('idx_replies_author_date').on(t.authorId, t.createdAt)]);

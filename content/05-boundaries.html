@@ -1,0 +1,32 @@
+<h2 id="materials">5.1 先确认资料归属与使用范围</h2>
+<p>处理一份材料前，分别确认：你是否有权使用它、是否允许发送给当前服务、是否允许把它的内容放进输出或公开教程。允许用 AI 辅助处理，不等于允许将原资料对外公开。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="资料处理方法"><table><thead><tr><th>资料类型</th><th>处理方式</th><th>需要核对</th></tr></thead><tbody>
+<tr><td>公开文档与公开项目</td><td>按来源和许可引用，保留出处。</td><td>公开可读不等于可以任意再分发。</td></tr>
+<tr><td>个人原创资料</td><td>按需要提供相关部分。</td><td>其中是否混入他人信息或第三方素材。</td></tr>
+<tr><td>客户材料</td><td>按适用授权匿名化、删减或使用示例数据。</td><td>名称、联系人、订单、报价等能否关联回真实客户。</td></tr>
+<tr><td>组织内部工程材料</td><td>依照组织已确认的范围，在获准的服务和工作空间中使用。</td><td>接收方、任务范围与输出的传播范围。</td></tr>
+<tr><td>密码、密钥和私钥</td><td>通过专门的认证方式或受控输入处理。</td><td>避免进入普通聊天、公开代码、截图或共享日志。</td></tr>
+</tbody></table></div>
+<p>不能只凭“源代码”“BOM”或“硬件原理图”这些文件类型决定是否能使用。应依据资料归属与实际授权判断，并把任务无关的材料移出可访问范围。</p>
+<h2 id="anonymize">5.2 如何做一份可用的脱敏示例</h2>
+<ol><li>将客户、组织、人员和项目名称换成一致的示例名称。</li><li>清理邮箱、电话号码、地址、订单号和内部链接。</li><li>把商业金额、非公开参数和内部时间线替换为明确标注的演示数据。</li><li>保留教学必需的字段、结构、输入输出关系和操作步骤。</li><li>检查截图侧栏、文件名、窗口标题、日志与图表标注，避免正文处理后图片仍泄露信息。</li></ol>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button class="copy" type="button">复制</button></div><pre><code>请把这份材料整理为可公开教学的示例。
+保留：任务流程、字段结构、操作方法和验收方式。
+替换：人员、客户、组织、项目、账号、地址及非公开参数。
+示例数据必须注明为演示数据，不得冒充实际结果。
+列出需要人工确认的内容，但不要在审阅报告中再次完整复写敏感值。</code></pre></div>
+<h2 id="recipients">5.3 了解资料实际发送给谁</h2>
+<p>使用插件、第三方模型或本地网关时，要分别确认每个接收方。客户端在本机运行，只说明客户端的位置；如果它调用外部模型，相关请求仍可能发送给模型供应商。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="数据接收方"><table><thead><tr><th>使用方式</th><th>需要确认的环节</th></tr></thead><tbody><tr><td>ChatGPT 工作空间</td><td>当前账号、工作空间及适用的数据处理设置。</td></tr><tr><td>通过插件连接外部服务</td><td>插件提供的工具、外部服务、账号和读写权限。</td></tr><tr><td>本地网关连接其他模型</td><td>本地日志与配置、实际供应商、上游地址和附属工具服务。</td></tr></tbody></table></div>
+<p>OpenAI 当前说明 Business 业务数据默认不用于训练；这不应自动外推到另一个供应商、第三方中转或所有插件服务。订阅登录和 API Key 登录适用的管理与数据设置也需要分别核对。</p>
+<p class="source">参考：<a href="https://learn.chatgpt.com/docs/pricing" target="_blank" rel="noopener noreferrer">Business 与数据说明</a> · <a href="https://learn.chatgpt.com/docs/auth" target="_blank" rel="noopener noreferrer">登录方式与适用设置</a></p>
+<h2 id="operations">5.4 用规则说明意图，用权限限制操作</h2>
+<p>提示词和 AGENTS.md 用于说明任务约定。实际文件读写、网络访问和外部服务动作，还需要由当前环境的权限机制约束。<code>.gitignore</code> 管理的是 Git 忽略规则，也不能用来阻止工具读取文件。</p>
+<ul><li>只开放任务需要的目录、账号和工具。</li><li>修改前保护已有工作，明确本次范围。</li><li>删除、覆盖、推送、发布及影响外部数据的动作，核对具体目标与授权。</li><li>首次使用插件或脚本时，先在示例项目中检查实际行为。</li></ul>
+<p class="source">参考：<a href="https://learn.chatgpt.com/docs/permissions" target="_blank" rel="noopener noreferrer">权限配置</a> · <a href="https://git-scm.com/docs/gitignore" target="_blank" rel="noopener noreferrer">Git 忽略规则</a></p>
+<h2 id="verify">5.5 检查真实结果与未验证项</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="交付检查"><table><thead><tr><th>交付物</th><th>检查重点</th></tr></thead><tbody><tr><td>报告与资料总结</td><td>数据、出处、遗漏和结论是否对应原始材料。</td></tr><tr><td>代码修改</td><td>实际 diff、构建与测试结果、已有工作是否保留。</td></tr><tr><td>硬件或嵌入式方案</td><td>电气条件、时序、保护和需要实机验证的部分。</td></tr><tr><td>公开网站与教程</td><td>正文、图片、下载包和源代码中是否残留内部信息。</td></tr></tbody></table></div>
+<p>区分“已经执行”“建议执行”和“无法验证”。模型的自查和总结可以帮助定位问题，但不能代替实际文件、日志、测试或人工确认。</p>
+<h2 id="share">5.6 在公开讨论中提问</h2>
+<p>发布问题时提供最小可复现示例：入口、版本、操作步骤、错误表现与预期结果。删除账号凭据、客户资料和无关项目内容；不要上传整份内部工程只为解释一个小问题。</p>
+<p>本审阅版保留了原稿截图。提交替换图时，请先检查所有可见区域，确认有权公开使用；对外发布前处理已标注的账号、授权和内部项目内容。</p>

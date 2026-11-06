@@ -1,0 +1,58 @@
+[
+  {
+    "id": "getting-started",
+    "number": "01",
+    "title": "入门必看",
+    "description": "认识工具，准备账号，建立清晰的任务与资料边界。",
+    "file": "01-getting-started.html"
+  },
+  {
+    "id": "chatgpt",
+    "number": "02",
+    "title": "GPT 使用指南",
+    "description": "从文档、测试和技术资料出发，把需求变成可以复核的结果。",
+    "file": "02-chatgpt.html"
+  },
+  {
+    "id": "codex",
+    "number": "03",
+    "title": "Codex 使用指南",
+    "description": "从安装到项目管理，保留完整步骤、工程模板与使用技巧。",
+    "file": "03-codex.html"
+  },
+  {
+    "id": "desktop",
+    "number": "04",
+    "title": "GPT 与 Codex 桌面版",
+    "description": "认识聊天与工作入口，检查任务衔接、文件位置和用量。",
+    "file": "04-desktop.html"
+  },
+  {
+    "id": "boundaries",
+    "number": "05",
+    "title": "安全边界",
+    "description": "分清资料授权、数据接收方、操作范围和公开分享的边界。",
+    "file": "05-boundaries.html"
+  },
+  {
+    "id": "practice",
+    "number": "06",
+    "title": "基于实际项目的技巧",
+    "description": "用 Skill、Hooks、MCP 和 Plugin，形成可复用的工作流程。",
+    "file": "06-practice.html"
+  },
+  {
+    "id": "models",
+    "number": "07",
+    "title": "如何接入其他模型",
+    "description": "理解本地网关、供应商、分层验收和多模型协作。",
+    "file": "07-models.html"
+  },
+  {
+    "id": "appendix",
+    "number": "08",
+    "title": "技术补充说明",
+    "description": "注册、验证、团队管理、订阅和用量的查询与处理方法。",
+    "file": "08-appendix.html"
+  }
+]

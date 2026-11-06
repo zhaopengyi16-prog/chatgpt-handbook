@@ -1,0 +1,1323 @@
+[
+  {
+    "file": "screenshots/original-image2.png",
+    "chapter": "getting-started",
+    "caption": "1.4 团队工作空间入口：操作示意",
+    "status": "original",
+    "id": "getting-started-01",
+    "images": [
+      {
+        "file": "screenshots/original-image2.png",
+        "width": 676,
+        "height": 603,
+        "source_image": "image2.png",
+        "sha256": "0724baf0be741d81fad550ee6376cbeedc3ce1488f7747d62d8a835198012d6d"
+      }
+    ],
+    "source_block": 112,
+    "review_note": "账号与工作空间信息"
+  },
+  {
+    "file": "screenshots/original-image3.png",
+    "chapter": "chatgpt",
+    "caption": "2.1认识GPT：操作示意",
+    "status": "original",
+    "id": "chatgpt-01",
+    "images": [
+      {
+        "file": "screenshots/original-image3.png",
+        "width": 2556,
+        "height": 960,
+        "source_image": "image3.png",
+        "sha256": "de0017c7424f211070f787201ddbabcd027abfc6c99bf6b33eb978137575f96c"
+      }
+    ],
+    "source_block": 166,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image9.png",
+    "chapter": "chatgpt",
+    "caption": "2.4 如何上传文件（必看）：操作示意",
+    "status": "original",
+    "id": "chatgpt-02",
+    "images": [
+      {
+        "file": "screenshots/original-image9.png",
+        "width": 1193,
+        "height": 717,
+        "source_image": "image9.png",
+        "sha256": "485bf9d93d12429d1bd552ef8e0840eb56fb6aec80f3259aab283048176033eb"
+      }
+    ],
+    "source_block": 294,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image10.png",
+    "chapter": "chatgpt",
+    "caption": "2.4 如何上传文件（必看）：可以直接将文件拖动进GPT页面",
+    "status": "original",
+    "id": "chatgpt-03",
+    "images": [
+      {
+        "file": "screenshots/original-image10.png",
+        "width": 2134,
+        "height": 977,
+        "source_image": "image10.png",
+        "sha256": "6ca82c242a7ddbac1012c9ffe6b929951833b27b535e512adce9f5233ecbcba4"
+      }
+    ],
+    "source_block": 294,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image24.png",
+    "chapter": "codex",
+    "caption": "3.3.1 界面认识：操作示意",
+    "status": "original",
+    "id": "codex-01",
+    "images": [
+      {
+        "file": "screenshots/original-image24.png",
+        "width": 2560,
+        "height": 1079,
+        "source_image": "image24.png",
+        "sha256": "04d2361fd252c9dc68542eb4b654fe26b50fcb0b534c19d0727ca4d71a5a11d0"
+      }
+    ],
+    "source_block": 420,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image25.png",
+    "chapter": "codex",
+    "caption": "3.3.1 界面认识：操作示意",
+    "status": "original",
+    "id": "codex-02",
+    "images": [
+      {
+        "file": "screenshots/original-image25.png",
+        "width": 939,
+        "height": 657,
+        "source_image": "image25.png",
+        "sha256": "aa8bccf294ea4d068c1f62cabad13103b74d9ca56bcc1c0558e373046d23faee"
+      }
+    ],
+    "source_block": 424,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image26.png",
+    "chapter": "codex",
+    "caption": "3.3.1 界面认识：操作示意",
+    "status": "original",
+    "id": "codex-03",
+    "images": [
+      {
+        "file": "screenshots/original-image26.png",
+        "width": 480,
+        "height": 361,
+        "source_image": "image26.png",
+        "sha256": "2756f6f142f4b5aae06959d7ec0c336b32ab487c3ec8ef82e5fd1c04b36d8aac"
+      }
+    ],
+    "source_block": 424,
+    "review_note": "登录身份信息"
+  },
+  {
+    "file": "screenshots/original-image27.png",
+    "chapter": "codex",
+    "caption": "3.3.1 界面认识：操作示意",
+    "status": "original",
+    "id": "codex-04",
+    "images": [
+      {
+        "file": "screenshots/original-image27.png",
+        "width": 494,
+        "height": 378,
+        "source_image": "image27.png",
+        "sha256": "d587db6b7916653cbade91c8eb1f42c213c03329669bb78ff59609980c360c95"
+      }
+    ],
+    "source_block": 424,
+    "review_note": "账号与用量信息"
+  },
+  {
+    "file": "screenshots/original-image28.png",
+    "chapter": "codex",
+    "caption": "3.3.1 界面认识：操作示意",
+    "status": "original",
+    "id": "codex-05",
+    "images": [
+      {
+        "file": "screenshots/original-image28.png",
+        "width": 2879,
+        "height": 1799,
+        "source_image": "image28.png",
+        "sha256": "0c876c67b6187ca618aa9498a167cfdc78d5e861b84f13d52eea780eef5d73e0"
+      }
+    ],
+    "source_block": 426,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image29.png",
+    "chapter": "codex",
+    "caption": "3.4.2 README.md 应该写什么：操作示意",
+    "status": "original",
+    "id": "codex-06",
+    "images": [
+      {
+        "file": "screenshots/original-image29.png",
+        "width": 1345,
+        "height": 793,
+        "source_image": "image29.png",
+        "sha256": "1bd1de1864c7438b08e363b5f969184a7e874d4d938ab3d72abc811338120a30"
+      }
+    ],
+    "source_block": 449,
+    "review_note": "实际项目文档与架构细节"
+  },
+  {
+    "file": "screenshots/original-image30.png",
+    "chapter": "codex",
+    "caption": "3.4.3 AGENTS.md 应该写什么（必看）：操作示意",
+    "status": "original",
+    "id": "codex-07",
+    "images": [
+      {
+        "file": "screenshots/original-image30.png",
+        "width": 862,
+        "height": 730,
+        "source_image": "image30.png",
+        "sha256": "98dd35092b2968e7261464e6296ac06963e763c682697222ae1c60e89c043822"
+      }
+    ],
+    "source_block": 461,
+    "review_note": "实际项目规则及工程参数"
+  },
+  {
+    "file": "screenshots/original-image32.png",
+    "chapter": "codex",
+    "caption": "1.4 .gitignore 建议包含的内容（推荐默认）：操作示意",
+    "status": "original",
+    "id": "codex-08",
+    "images": [
+      {
+        "file": "screenshots/original-image32.png",
+        "width": 2560,
+        "height": 1078,
+        "source_image": "image32.png",
+        "sha256": "f9ffc4134afb8c07fb94711a8ac24e715cd916ddaa9d0b42799664e73a6fc93d"
+      }
+    ],
+    "source_block": 544,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image33.png",
+    "chapter": "codex",
+    "caption": "1.3 提交方式一：在 VS Code 中提交：操作示意",
+    "status": "original",
+    "id": "codex-09",
+    "images": [
+      {
+        "file": "screenshots/original-image33.png",
+        "width": 1236,
+        "height": 559,
+        "source_image": "image33.png",
+        "sha256": "c09170f4a3715ff884441d01cc161a773a2a026b9a7b40bf5cf3256f0d7696bf"
+      }
+    ],
+    "source_block": 593,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image34.png",
+    "chapter": "codex",
+    "caption": "5.1.1 安装 GitHub CLI：操作示意",
+    "status": "original",
+    "id": "codex-10",
+    "images": [
+      {
+        "file": "screenshots/original-image34.png",
+        "width": 812,
+        "height": 410,
+        "source_image": "image34.png",
+        "sha256": "88b2287869adb7bb56a6b6c97afc8710805b96c2e70ea796c2ec8e0caee6b54f"
+      }
+    ],
+    "source_block": 617,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image35.png",
+    "chapter": "codex",
+    "caption": "5.1.2 登录 GitHub CLI：操作示意",
+    "status": "original",
+    "id": "codex-11",
+    "images": [
+      {
+        "file": "screenshots/original-image35.png",
+        "width": 2560,
+        "height": 1079,
+        "source_image": "image35.png",
+        "sha256": "786854095dfb75fbd788511a7a1a113cfe24cdfb5f42e1309eb7a071ee9bbeff"
+      }
+    ],
+    "source_block": 622,
+    "review_note": "设备授权验证码"
+  },
+  {
+    "file": "screenshots/original-image36.png",
+    "chapter": "codex",
+    "caption": "5.1.2 登录 GitHub CLI：操作示意",
+    "status": "original",
+    "id": "codex-12",
+    "images": [
+      {
+        "file": "screenshots/original-image36.png",
+        "width": 1029,
+        "height": 777,
+        "source_image": "image36.png",
+        "sha256": "b2a44af9ab88fec7a5bf242061b36522784e264f5a696c3a1688b0f6256a6ae1"
+      }
+    ],
+    "source_block": 624,
+    "review_note": "账号身份与授权信息"
+  },
+  {
+    "file": "screenshots/original-image43.png",
+    "chapter": "desktop",
+    "caption": "更新界面认识：操作示意",
+    "status": "original",
+    "id": "desktop-01",
+    "images": [
+      {
+        "file": "screenshots/original-image43.png",
+        "width": 2879,
+        "height": 1799,
+        "source_image": "image43.png",
+        "sha256": "f195b332820075e7c86cc56bd37143be098ec6ffff8c124272898cf0ec13386b"
+      }
+    ],
+    "source_block": 895,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image44.png",
+    "chapter": "desktop",
+    "caption": "更新界面认识：操作示意",
+    "status": "original",
+    "id": "desktop-02",
+    "images": [
+      {
+        "file": "screenshots/original-image44.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image44.png",
+        "sha256": "4f2b45219de7904cadecf357f42186e2e4580b0616f82755534d6d0f684fad55"
+      }
+    ],
+    "source_block": 897,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image45.png",
+    "chapter": "practice",
+    "caption": "Skill 界面：操作示意",
+    "status": "original",
+    "id": "practice-01",
+    "images": [
+      {
+        "file": "screenshots/original-image45.png",
+        "width": 2879,
+        "height": 1799,
+        "source_image": "image45.png",
+        "sha256": "030909fb40628111ba252ccc5da161003e21ac7114359fff3e22671d8e8e1953"
+      }
+    ],
+    "source_block": 908,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image46.png",
+    "chapter": "practice",
+    "caption": "Skill 界面：操作示意",
+    "status": "original",
+    "id": "practice-02",
+    "images": [
+      {
+        "file": "screenshots/original-image46.png",
+        "width": 1150,
+        "height": 1293,
+        "source_image": "image46.png",
+        "sha256": "fcbadff5c9d976302e1db0363ce10578ff10c60ba014badd09fbb37579e256ab"
+      }
+    ],
+    "source_block": 956,
+    "review_note": "工程初始化案例及项目内容"
+  },
+  {
+    "file": "screenshots/original-image47.png",
+    "chapter": "practice",
+    "caption": "Skill 界面：操作示意",
+    "status": "original",
+    "id": "practice-03",
+    "images": [
+      {
+        "file": "screenshots/original-image47.png",
+        "width": 1307,
+        "height": 187,
+        "source_image": "image47.png",
+        "sha256": "e5ec9e5ca538f8212ae38434026b05798675cdc2d96355a6c8a2533504e14b93"
+      },
+      {
+        "file": "screenshots/original-image48.png",
+        "width": 1484,
+        "height": 1117,
+        "source_image": "image48.png",
+        "sha256": "55cc49cfcbe883131dd43adf66306ff82e70d95de3127e3676e1aede17c12b50"
+      }
+    ],
+    "source_block": 956,
+    "review_note": "实际项目内容与执行记录"
+  },
+  {
+    "file": "screenshots/original-image49.png",
+    "chapter": "practice",
+    "caption": "理解Plugin：操作示意",
+    "status": "original",
+    "id": "practice-04",
+    "images": [
+      {
+        "file": "screenshots/original-image49.png",
+        "width": 2879,
+        "height": 1799,
+        "source_image": "image49.png",
+        "sha256": "0c97e8e659f9a0ed414f95c64b58a4c72363e5c994482b1d31e03cf5314b2b95"
+      }
+    ],
+    "source_block": 983,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image50.png",
+    "chapter": "practice",
+    "caption": "理解Plugin：操作示意",
+    "status": "original",
+    "id": "practice-05",
+    "images": [
+      {
+        "file": "screenshots/original-image50.png",
+        "width": 1448,
+        "height": 1086,
+        "source_image": "image50.png",
+        "sha256": "f1ce50e28a11dc37956149d232f7bff6a11c8c7fec23fc1cebfc37c931d99579"
+      }
+    ],
+    "source_block": 998,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image51.png",
+    "chapter": "practice",
+    "caption": "安装插件：操作示意",
+    "status": "original",
+    "id": "practice-06",
+    "images": [
+      {
+        "file": "screenshots/original-image51.png",
+        "width": 2601,
+        "height": 1747,
+        "source_image": "image51.png",
+        "sha256": "5a7c6b20c10e426eac4bbf966679475b18c4c7d02930fa5de6978a3a33fdd4cd"
+      }
+    ],
+    "source_block": 1004,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image52.png",
+    "chapter": "practice",
+    "caption": "安装插件：点击",
+    "status": "original",
+    "id": "practice-07",
+    "images": [
+      {
+        "file": "screenshots/original-image52.png",
+        "width": 1757,
+        "height": 1092,
+        "source_image": "image52.png",
+        "sha256": "d70ebb5f0e8904e564cb072c6afbf0a5805b4bb44d9f084ac76a53f925a909a0"
+      }
+    ],
+    "source_block": 1009,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image53.png",
+    "chapter": "practice",
+    "caption": "安装插件：先回到Application，然后就能看到已经被授权",
+    "status": "original",
+    "id": "practice-08",
+    "images": [
+      {
+        "file": "screenshots/original-image53.png",
+        "width": 1615,
+        "height": 1054,
+        "source_image": "image53.png",
+        "sha256": "4a64561c8b6ebf0c0446b2feddb40e1e21b1b22e04b864b8c9257d473e299a7b"
+      }
+    ],
+    "source_block": 1009,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image54.png",
+    "chapter": "practice",
+    "caption": "实际测试：操作示意",
+    "status": "original",
+    "id": "practice-09",
+    "images": [
+      {
+        "file": "screenshots/original-image54.png",
+        "width": 2879,
+        "height": 1799,
+        "source_image": "image54.png",
+        "sha256": "b502f8bec6023ac0a56f56db002a799f9b0ba942b6510d5d88462785c445b7b9"
+      }
+    ],
+    "source_block": 1011,
+    "review_note": "私人仓库名称与授权范围"
+  },
+  {
+    "file": "screenshots/original-image55.png",
+    "chapter": "models",
+    "caption": "3.2 方案 B：OpenCodex 多模型网关：操作示意",
+    "status": "original",
+    "id": "models-01",
+    "images": [
+      {
+        "file": "screenshots/original-image55.png",
+        "width": 1510,
+        "height": 956,
+        "source_image": "image55.png",
+        "sha256": "c2a861ad1bcc2bbbce8ac87fd7c832b01b4f758704a932970ad7df83d4a07c23"
+      }
+    ],
+    "source_block": 1059,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image57.png",
+    "chapter": "models",
+    "caption": "部署插件辅助安装：操作示意",
+    "status": "original",
+    "id": "models-02",
+    "images": [
+      {
+        "file": "screenshots/original-image57.png",
+        "width": 1831,
+        "height": 1253,
+        "source_image": "image57.png",
+        "sha256": "8b60e51a164336c14157d6a18bee4a4309b23977efacf29d61647167249774d6"
+      }
+    ],
+    "source_block": 1411,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image58.png",
+    "chapter": "models",
+    "caption": "部署插件辅助安装：操作示意",
+    "status": "original",
+    "id": "models-03",
+    "images": [
+      {
+        "file": "screenshots/original-image58.png",
+        "width": 1444,
+        "height": 733,
+        "source_image": "image58.png",
+        "sha256": "f00d8d569101115999432f913bf51f0cd0063e2198afc65f1cb29cea95786238"
+      }
+    ],
+    "source_block": 1413,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image59.png",
+    "chapter": "models",
+    "caption": "部署插件辅助安装：操作示意",
+    "status": "original",
+    "id": "models-04",
+    "images": [
+      {
+        "file": "screenshots/original-image59.png",
+        "width": 1416,
+        "height": 768,
+        "source_image": "image59.png",
+        "sha256": "43e0c7ed72d3358d3e7453f338859c4bba6b873aece44034bed53ebc8e7ef669"
+      }
+    ],
+    "source_block": 1415,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image60.png",
+    "chapter": "models",
+    "caption": "部署插件辅助安装：操作示意",
+    "status": "original",
+    "id": "models-05",
+    "images": [
+      {
+        "file": "screenshots/original-image60.png",
+        "width": 1539,
+        "height": 921,
+        "source_image": "image60.png",
+        "sha256": "58f110bbc6950fe2113ecf6e86efd3b1cb9df17f2a17189863ec60da59cab03c"
+      }
+    ],
+    "source_block": 1417,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image61.png",
+    "chapter": "models",
+    "caption": "部署插件辅助安装：操作示意",
+    "status": "original",
+    "id": "models-06",
+    "images": [
+      {
+        "file": "screenshots/original-image61.png",
+        "width": 1631,
+        "height": 1106,
+        "source_image": "image61.png",
+        "sha256": "811e0a6d408478fc19acd187bb4aa0a9a8aabe10880ebe76e535f0f0838be741"
+      }
+    ],
+    "source_block": 1420,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image62.png",
+    "chapter": "models",
+    "caption": "部署插件辅助安装：操作示意",
+    "status": "original",
+    "id": "models-07",
+    "images": [
+      {
+        "file": "screenshots/original-image62.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image62.png",
+        "sha256": "1fec57b77345709af5a2e7c347bbac99a3e5784e087d4b5f3b0098fd9df0d570"
+      }
+    ],
+    "source_block": 1424,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image63.png",
+    "chapter": "models",
+    "caption": "部署插件辅助安装：操作示意",
+    "status": "original",
+    "id": "models-08",
+    "images": [
+      {
+        "file": "screenshots/original-image63.png",
+        "width": 1842,
+        "height": 1080,
+        "source_image": "image63.png",
+        "sha256": "5983fc6d7b7d630e2a30410a6d4c7ad7e5c2f580ef5091f127aceec3be8d2fcc"
+      }
+    ],
+    "source_block": 1427,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image64.png",
+    "chapter": "models",
+    "caption": "OpenCodex 控制台：操作示意",
+    "status": "original",
+    "id": "models-09",
+    "images": [
+      {
+        "file": "screenshots/original-image64.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image64.png",
+        "sha256": "1b4fb52c6fbf35e33ddb5330c7b6fe71f50760c407b132f67c6cebf868ef2c4e"
+      }
+    ],
+    "source_block": 1437,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image65.png",
+    "chapter": "models",
+    "caption": "OpenCodex 控制台：操作示意",
+    "status": "original",
+    "id": "models-10",
+    "images": [
+      {
+        "file": "screenshots/original-image65.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image65.png",
+        "sha256": "b3bfdc08afad5441516297d4d2865f2085286c1cf95323f8d75223c6361d47d0"
+      }
+    ],
+    "source_block": 1437,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image66.png",
+    "chapter": "models",
+    "caption": "OpenCodex 控制台：操作示意",
+    "status": "original",
+    "id": "models-11",
+    "images": [
+      {
+        "file": "screenshots/original-image66.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image66.png",
+        "sha256": "38420fceebd317ba9add94fc8ad03ebe8ce3ccb62eaa41569dd66d2691118ed1"
+      }
+    ],
+    "source_block": 1441,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image67.png",
+    "chapter": "models",
+    "caption": "OpenCodex 控制台：操作示意",
+    "status": "original",
+    "id": "models-12",
+    "images": [
+      {
+        "file": "screenshots/original-image67.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image67.png",
+        "sha256": "e555c55f245afa2a2b724ee6f8d03475e1173c9940fce061679eaeaaf6d8791c"
+      }
+    ],
+    "source_block": 1441,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image68.png",
+    "chapter": "models",
+    "caption": "OpenCodex 控制台：操作示意",
+    "status": "original",
+    "id": "models-13",
+    "images": [
+      {
+        "file": "screenshots/original-image68.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image68.png",
+        "sha256": "2ec2dbfd4b042ba79baab40d3ca21b6bdb8b68a5bdf376cc6b2ae1fd812ceecf"
+      }
+    ],
+    "source_block": 1445,
+    "review_note": "多账号身份信息"
+  },
+  {
+    "file": "screenshots/original-image69.png",
+    "chapter": "models",
+    "caption": "OpenCodex 控制台：操作示意",
+    "status": "original",
+    "id": "models-14",
+    "images": [
+      {
+        "file": "screenshots/original-image69.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image69.png",
+        "sha256": "43b87083760fc647f75ae45169264c567b984281a0d3a073b43b21522702d8f4"
+      }
+    ],
+    "source_block": 1445,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image70.png",
+    "chapter": "models",
+    "caption": "多账号路由配置：操作示意",
+    "status": "original",
+    "id": "models-15",
+    "images": [
+      {
+        "file": "screenshots/original-image70.png",
+        "width": 2011,
+        "height": 1495,
+        "source_image": "image70.png",
+        "sha256": "623cef1b34e774746d4b8279192863fefcd93a6f820934f13e542d76aea32a7b"
+      }
+    ],
+    "source_block": 1448,
+    "review_note": "账号池身份信息"
+  },
+  {
+    "file": "screenshots/original-image71.png",
+    "chapter": "models",
+    "caption": "多账号路由配置：操作示意",
+    "status": "original",
+    "id": "models-16",
+    "images": [
+      {
+        "file": "screenshots/original-image71.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image71.png",
+        "sha256": "e708dcff33884b64dad4051cec25a9e195a6b80ff215bb44d72ac249fb3b5364"
+      }
+    ],
+    "source_block": 1450,
+    "review_note": "账号登录界面"
+  },
+  {
+    "file": "screenshots/original-image72.png",
+    "chapter": "models",
+    "caption": "多账号路由配置：操作示意",
+    "status": "original",
+    "id": "models-17",
+    "images": [
+      {
+        "file": "screenshots/original-image72.png",
+        "width": 2879,
+        "height": 1647,
+        "source_image": "image72.png",
+        "sha256": "3d53ee76dfb2ed64353afa36e2b3ccdba46ce91f0403c327e1e204a662ce375f"
+      }
+    ],
+    "source_block": 1452,
+    "review_note": "账号池身份信息"
+  },
+  {
+    "file": "screenshots/original-image73.png",
+    "chapter": "models",
+    "caption": "多账号路由配置：操作示意",
+    "status": "original",
+    "id": "models-18",
+    "images": [
+      {
+        "file": "screenshots/original-image73.png",
+        "width": 1808,
+        "height": 1213,
+        "source_image": "image73.png",
+        "sha256": "c1b561e61ad13b10aaee020d23c82ff4dc0ca02271238284d20a82e7f628ac60"
+      }
+    ],
+    "source_block": 1454,
+    "review_note": "账号池与路由信息"
+  },
+  {
+    "file": "screenshots/original-image74.png",
+    "chapter": "models",
+    "caption": "多账号路由配置：操作示意",
+    "status": "original",
+    "id": "models-19",
+    "images": [
+      {
+        "file": "screenshots/original-image74.png",
+        "width": 1775,
+        "height": 674,
+        "source_image": "image74.png",
+        "sha256": "562e16a16fa4dfde8d29475d4c3df356db3abea9196b33e31577f3b4e2946b34"
+      }
+    ],
+    "source_block": 1456,
+    "review_note": "账号池与切换策略"
+  },
+  {
+    "file": "screenshots/original-image75.png",
+    "chapter": "models",
+    "caption": "多账号路由配置：操作示意",
+    "status": "original",
+    "id": "models-20",
+    "images": [
+      {
+        "file": "screenshots/original-image75.png",
+        "width": 1825,
+        "height": 464,
+        "source_image": "image75.png",
+        "sha256": "f4e72f0f64f23d27e5d0c18be72a66df9b75aa9f647aa04b151e0cfe85245887"
+      }
+    ],
+    "source_block": 1457,
+    "review_note": "账号池与切换策略"
+  },
+  {
+    "file": "screenshots/original-image76.png",
+    "chapter": "appendix",
+    "caption": "原稿套餐分类示意（一）",
+    "status": "original",
+    "id": "appendix-01",
+    "images": [
+      {
+        "file": "screenshots/original-image76.png",
+        "width": 1491,
+        "height": 880,
+        "source_image": "image76.png",
+        "sha256": "a186b66affa44baf027b0bf31671c3877b5e090923f02185d963e3f3adde3511"
+      }
+    ],
+    "source_block": 1481,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image77.png",
+    "chapter": "appendix",
+    "caption": "原稿套餐分类示意（二）",
+    "status": "original",
+    "id": "appendix-02",
+    "images": [
+      {
+        "file": "screenshots/original-image77.png",
+        "width": 1043,
+        "height": 761,
+        "source_image": "image77.png",
+        "sha256": "80b7f99453403743790fc2b8a8abfd4de6614630715557687e6ed29475e11203"
+      }
+    ],
+    "source_block": 1483,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image78.png",
+    "chapter": "appendix",
+    "caption": "原稿用量面板",
+    "status": "original",
+    "id": "appendix-03",
+    "images": [
+      {
+        "file": "screenshots/original-image78.png",
+        "width": 1664,
+        "height": 392,
+        "source_image": "image78.png",
+        "sha256": "09d0e97d5ab446ef31da21864d39ff0123bd836d4d1692109dc89b192a48d490"
+      }
+    ],
+    "source_block": 1486,
+    "review_note": ""
+  },
+  {
+    "file": "screenshots/original-image79.png",
+    "chapter": "appendix",
+    "caption": "原稿额度与账号状态",
+    "status": "original",
+    "id": "appendix-04",
+    "images": [
+      {
+        "file": "screenshots/original-image79.png",
+        "width": 451,
+        "height": 376,
+        "source_image": "image79.png",
+        "sha256": "6887323bd9c1540268bdcbe653d435377492ed4974cd13061e54894b01c263cd"
+      }
+    ],
+    "source_block": 1489,
+    "review_note": "账号与用量信息"
+  },
+  {
+    "file": "screenshots/original-image80.png",
+    "chapter": "appendix",
+    "caption": "原稿模型更新界面",
+    "status": "original",
+    "id": "appendix-05",
+    "images": [
+      {
+        "file": "screenshots/original-image80.png",
+        "width": 758,
+        "height": 289,
+        "source_image": "image80.png",
+        "sha256": "6493b638cc185c6daa4c484df1ff96c718dbd29114b666dea03c2f525fe9032f"
+      }
+    ],
+    "source_block": 1492,
+    "review_note": ""
+  },
+  {
+    "id": "chatgpt-original-04-169",
+    "chapter": "chatgpt",
+    "caption": "模型选择",
+    "file": "screenshots/original-image4.png",
+    "images": [
+      {
+        "file": "screenshots/original-image4.png",
+        "width": 582,
+        "height": 378,
+        "source_image": "image4.png",
+        "sha256": "f2d9a9556d653d233230f5fa7cc906ce7643d56d66f5a7b7c3d3703cae0fc518"
+      }
+    ],
+    "status": "original",
+    "source_block": 169,
+    "review_note": ""
+  },
+  {
+    "id": "chatgpt-original-05-169",
+    "chapter": "chatgpt",
+    "caption": "对话管理",
+    "file": "screenshots/original-image5.png",
+    "images": [
+      {
+        "file": "screenshots/original-image5.png",
+        "width": 365,
+        "height": 270,
+        "source_image": "image5.png",
+        "sha256": "64d5ef5d5ac81ebf3c38aae99dc1fdeaef7d756433cdc279c23044bdff76f994"
+      }
+    ],
+    "status": "original",
+    "source_block": 169,
+    "review_note": ""
+  },
+  {
+    "id": "chatgpt-original-06-169",
+    "chapter": "chatgpt",
+    "caption": "项目管理",
+    "file": "screenshots/original-image6.png",
+    "images": [
+      {
+        "file": "screenshots/original-image6.png",
+        "width": 1626,
+        "height": 911,
+        "source_image": "image6.png",
+        "sha256": "375e8b29612d806c61fe852f1dd077e94e2738434f61c0ea132dffd913484f89"
+      }
+    ],
+    "status": "original",
+    "source_block": 169,
+    "review_note": ""
+  },
+  {
+    "id": "chatgpt-original-07-173",
+    "chapter": "chatgpt",
+    "caption": "创建自定义 GPT",
+    "file": "screenshots/original-image7.png",
+    "images": [
+      {
+        "file": "screenshots/original-image7.png",
+        "width": 1885,
+        "height": 889,
+        "source_image": "image7.png",
+        "sha256": "53d87f8169192efbf395284b0718f4d03f6bfd0fdaf2b1e0f300d4e8a26ed0f6"
+      }
+    ],
+    "status": "original",
+    "source_block": 173,
+    "review_note": ""
+  },
+  {
+    "id": "chatgpt-original-08-173",
+    "chapter": "chatgpt",
+    "caption": "个人设置",
+    "file": "screenshots/original-image8.png",
+    "images": [
+      {
+        "file": "screenshots/original-image8.png",
+        "width": 832,
+        "height": 679,
+        "source_image": "image8.png",
+        "sha256": "9992a24cb3c8ddd27104e611a0f6f1bb753c3e3e328fa9df62197f8642f1b037"
+      }
+    ],
+    "status": "original",
+    "source_block": 173,
+    "review_note": "个人设置界面需核对账号信息"
+  },
+  {
+    "id": "codex-original-12-396",
+    "chapter": "codex",
+    "caption": "安装与登录步骤 1",
+    "file": "screenshots/original-image12.png",
+    "images": [
+      {
+        "file": "screenshots/original-image12.png",
+        "width": 460,
+        "height": 201,
+        "source_image": "image12.png",
+        "sha256": "3ba4dcb944366f33563c812496414d5d4a35756ac47f62813d4bd15864bb61e9"
+      }
+    ],
+    "status": "original",
+    "source_block": 396,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-13-396",
+    "chapter": "codex",
+    "caption": "安装与登录步骤 2",
+    "file": "screenshots/original-image13.png",
+    "images": [
+      {
+        "file": "screenshots/original-image13.png",
+        "width": 1787,
+        "height": 938,
+        "source_image": "image13.png",
+        "sha256": "d8d093096619e1af75bbaf0135bbbcdb82b5d89a76b567e2af0b255f9080d83e"
+      }
+    ],
+    "status": "original",
+    "source_block": 396,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-14-396",
+    "chapter": "codex",
+    "caption": "安装与登录步骤 3",
+    "file": "screenshots/original-image14.png",
+    "images": [
+      {
+        "file": "screenshots/original-image14.png",
+        "width": 1090,
+        "height": 760,
+        "source_image": "image14.png",
+        "sha256": "16f170de3fb28cf95906d4874c4055556107337fa4ea2c6a4e9b4556784e3aca"
+      }
+    ],
+    "status": "original",
+    "source_block": 396,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-15-400",
+    "chapter": "codex",
+    "caption": "安装与登录步骤 4",
+    "file": "screenshots/original-image15.png",
+    "images": [
+      {
+        "file": "screenshots/original-image15.png",
+        "width": 653,
+        "height": 449,
+        "source_image": "image15.png",
+        "sha256": "dff1e4372b2059863da3ec5620b5e5155c93d7c0707d65d04c754723477b22de"
+      }
+    ],
+    "status": "original",
+    "source_block": 400,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-16-400",
+    "chapter": "codex",
+    "caption": "安装与登录步骤 5",
+    "file": "screenshots/original-image16.png",
+    "images": [
+      {
+        "file": "screenshots/original-image16.png",
+        "width": 1317,
+        "height": 820,
+        "source_image": "image16.png",
+        "sha256": "380ee8ecc740df0c44f9758ec79a6b4ce7cc2f0bf0b0adcf79f3c682db67fa2c"
+      }
+    ],
+    "status": "original",
+    "source_block": 400,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-17-409",
+    "chapter": "codex",
+    "caption": "编辑器与文件打开设置",
+    "file": "screenshots/original-image17.png",
+    "images": [
+      {
+        "file": "screenshots/original-image17.png",
+        "width": 824,
+        "height": 639,
+        "source_image": "image17.png",
+        "sha256": "717fd58cc737a47f4cddef27794800d7662d2b85e892e3e118d8533b68eb85b3"
+      }
+    ],
+    "status": "original",
+    "source_block": 409,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-18-413",
+    "chapter": "codex",
+    "caption": "权限、计划与模型设置 1",
+    "file": "screenshots/original-image18.png",
+    "images": [
+      {
+        "file": "screenshots/original-image18.png",
+        "width": 491,
+        "height": 315,
+        "source_image": "image18.png",
+        "sha256": "af0b631001cb811768c0b9a63d5ef38593d354fd4c0ab740c93a3217583984bb"
+      }
+    ],
+    "status": "original",
+    "source_block": 413,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-19-413",
+    "chapter": "codex",
+    "caption": "权限、计划与模型设置 2",
+    "file": "screenshots/original-image19.png",
+    "images": [
+      {
+        "file": "screenshots/original-image19.png",
+        "width": 1317,
+        "height": 820,
+        "source_image": "image19.png",
+        "sha256": "a42e992ca9f07b0b90eb6e2e272aee498bfa6e9d7a6027841719051e40737bbf"
+      }
+    ],
+    "status": "original",
+    "source_block": 413,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-20-413",
+    "chapter": "codex",
+    "caption": "权限、计划与模型设置 3",
+    "file": "screenshots/original-image20.png",
+    "images": [
+      {
+        "file": "screenshots/original-image20.png",
+        "width": 788,
+        "height": 443,
+        "source_image": "image20.png",
+        "sha256": "b8d8b861dd2fce2dcf0f4dd001a252fa2b0140aeb5e5b23743f3a95a47c6019c"
+      }
+    ],
+    "status": "original",
+    "source_block": 413,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-21-413",
+    "chapter": "codex",
+    "caption": "权限、计划与模型设置 4",
+    "file": "screenshots/original-image21.png",
+    "images": [
+      {
+        "file": "screenshots/original-image21.png",
+        "width": 551,
+        "height": 425,
+        "source_image": "image21.png",
+        "sha256": "eeedc7a4b4b8953ce81c6fa83d3171a57a4886aceedc512b854309de62a4f81b"
+      }
+    ],
+    "status": "original",
+    "source_block": 413,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-22-417",
+    "chapter": "codex",
+    "caption": "账号与个性化设置",
+    "file": "screenshots/original-image22.png",
+    "images": [
+      {
+        "file": "screenshots/original-image22.png",
+        "width": 944,
+        "height": 566,
+        "source_image": "image22.png",
+        "sha256": "8312d49bc8bed3e2d244bf5a29162cc5a1d2cad537934eb447da295358aac78f"
+      }
+    ],
+    "status": "original",
+    "source_block": 417,
+    "review_note": "账号或邮箱信息"
+  },
+  {
+    "id": "codex-original-23-417",
+    "chapter": "codex",
+    "caption": "账号与个性化设置",
+    "file": "screenshots/original-image23.png",
+    "images": [
+      {
+        "file": "screenshots/original-image23.png",
+        "width": 1218,
+        "height": 810,
+        "source_image": "image23.png",
+        "sha256": "736b435f52256377e91ba2a71de532221baf64636f891ff5d8db9f945c771b2b"
+      }
+    ],
+    "status": "original",
+    "source_block": 417,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-31-513",
+    "chapter": "codex",
+    "caption": "项目与 Git 状态示例",
+    "file": "screenshots/original-image31.png",
+    "images": [
+      {
+        "file": "screenshots/original-image31.png",
+        "width": 1454,
+        "height": 1080,
+        "source_image": "image31.png",
+        "sha256": "1bfa8408d2af220abdb47e80089ee44b48b99385c1eacf4880c229935bca25af"
+      }
+    ],
+    "status": "original",
+    "source_block": 513,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-31-529",
+    "chapter": "codex",
+    "caption": "项目与 Git 状态示例",
+    "file": "screenshots/original-image31.png",
+    "images": [
+      {
+        "file": "screenshots/original-image31.png",
+        "width": 1454,
+        "height": 1080,
+        "source_image": "image31.png",
+        "sha256": "1bfa8408d2af220abdb47e80089ee44b48b99385c1eacf4880c229935bca25af"
+      }
+    ],
+    "status": "original",
+    "source_block": 529,
+    "review_note": ""
+  },
+  {
+    "id": "codex-original-37-627",
+    "chapter": "codex",
+    "caption": "GitHub CLI 登录结果与状态",
+    "file": "screenshots/original-image37.png",
+    "images": [
+      {
+        "file": "screenshots/original-image37.png",
+        "width": 760,
+        "height": 910,
+        "source_image": "image37.png",
+        "sha256": "b30da5106c246b27a8e5bf14b315ad5cf8f7d7b086573c155504ad30737537cb"
+      }
+    ],
+    "status": "original",
+    "source_block": 627,
+    "review_note": "账号、IP 与登录地点"
+  },
+  {
+    "id": "codex-original-38-627",
+    "chapter": "codex",
+    "caption": "GitHub CLI 登录结果与状态",
+    "file": "screenshots/original-image38.png",
+    "images": [
+      {
+        "file": "screenshots/original-image38.png",
+        "width": 1435,
+        "height": 744,
+        "source_image": "image38.png",
+        "sha256": "b33740c52cb29753d446bd8d5e4c397aa6cfd2c031c72c078e925b44168e3c62"
+      }
+    ],
+    "status": "original",
+    "source_block": 627,
+    "review_note": ""
+  }
+]
