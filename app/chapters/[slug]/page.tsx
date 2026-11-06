@@ -17,11 +17,11 @@ export default async function Chapter({params,searchParams}:{params:Promise<{slu
  if(!c)notFound();
  const html:string=c.html, headings=[...html.matchAll(/<h2[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/h2>/g)].map(m=>({id:m[1],title:m[2].replace(/<[^>]+>/g,'')}));
  const index=list.findIndex((x:any)=>x.id===id);
- return <>{preview&&<div className="review-note">草稿预览 · 仅管理员可见</div>}<div className="reader-layout"><aside className="reader-sidebar"><p className="side-caption">学习目录</p>{list.map((x:any,i:number)=><a className={'chapter-link '+(id===x.id?'active':'')} key={x.id} href={'/chapters/'+x.id+'.html'}><span>{String(i+1).padStart(2,'0')}</span>{x.title}</a>)}</aside><main id="main" className="article hb-article reader-article"><nav aria-label="面包屑" className="catalog-crumb">
+ return <>{preview&&<div className="review-note">草稿预览 · 仅管理员可见</div>}<div className="reader-layout"><aside className="reader-sidebar"><p className="side-caption">学习目录</p>{list.map((x:any,i:number)=><a className={'chapter-link '+(id===x.id?'active':'')} key={x.id} href={'/chapters/'+x.id+'.html'}><span>{String(i+1).padStart(2,'0')}</span>{x.title}</a>)}</aside><main id="main" className="article hb-article reader-article">{labels&&<nav aria-label="面包屑" className="catalog-crumb">
     <a href="/">首页</a><span aria-hidden="true">›</span>
-    {labels?.tasks.length ? (preview ? <span>{labels.tasks[0].name}</span> : <a href={categoryUrl('tasks',labels.tasks[0].id)}>{labels.tasks[0].name}</a>) : <a href="/#all-chapters">全部章节</a>}
+    {labels.tasks.length ? (preview ? <span>{labels.tasks[0].name}</span> : <a href={categoryUrl('tasks',labels.tasks[0].id)}>{labels.tasks[0].name}</a>) : <a href="/#all-chapters">全部章节</a>}
     <span aria-hidden="true">›</span><span aria-current="page">{c.title}</span>
-  </nav><ArticleHeader title={c.title} description={c.description}/>{labels&&(labels.tasks.length>0 || labels.tools.length>0 || labels.level)&&<div className="catalog-chapter-tags" aria-label="章节分类">
+  </nav>}<ArticleHeader title={c.title} description={c.description}/>{labels&&(labels.tasks.length>0 || labels.tools.length>0 || labels.level)&&<div className="catalog-chapter-tags" aria-label="章节分类">
     {labels.tasks.map(t=><span key={'task-'+t.id} className="badge">{preview?t.name:<a href={categoryUrl('tasks',t.id)}>{t.name}</a>}</span>)}
     {labels.tools.map(t=><span key={'tool-'+t.id} className="badge">{preview?t.name:<a href={categoryUrl('tools',t.id)}>{t.name}</a>}</span>)}
     {labels.level&&<span className="badge">{labels.level.name}</span>}
