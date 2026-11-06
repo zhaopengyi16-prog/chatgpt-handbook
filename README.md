@@ -4,7 +4,17 @@
 
 后台：https://chatgpt-handbook-community.zhaopengyi16.chatgpt.site/admin
 
-保留八章原纲、73 张原稿截图和浅色阅读版式。当前网站使用 Sites 的 Worker、D1、R2 和 ChatGPT 登录；无需绑定 GitHub 才能参与讨论。
+线上 v14 手册共有 **7 章**，包含公开阅读、内容管理和讨论社区。网站运行在 ChatGPT Sites，使用 Worker、D1、R2 和 ChatGPT 登录。
+
+**发布限制：** 本分支仅用于开源导入。线上 v14 没有改动，已发布正文仍引用旧图片。第 2 批完成旧截图过滤并通过预览验收之前，禁止将本分支发布到 Sites，否则读者会看到破图。
+
+## 内容在哪里
+
+线上章节的正文、草稿和发布版本存放在 Sites 的 D1 数据库；请在网站后台编辑并发布。仓库中的 `content/` 是 V3 静态版历史稿，改动它不会更新线上正文。`db/seed.json` 用于初次建站的内容初始化；`lib/content-revisions.ts` 等文件记录历次内容更新。源码不是线上数据库备份。
+
+## 截图
+
+所有旧截图和旧下载包均已从公开工程下线，不进入 Git 历史。新截图按 [贡献指南](CONTRIBUTING.md) 检查，在网站后台上传到 R2，再从图库插入正文，不提交到仓库。
 
 ## 日常维护
 
@@ -14,7 +24,7 @@
 
 游客可直接提交问题和回复，待站点所有者审核后公开。登录成员可直接发布，并编辑和删除自己的内容。社区支持分类、搜索和关联章节。管理员在「待审核」中通过或删除游客留言，并可置顶、锁定、隐藏和删除已公开话题。社区昵称由参与者填写，不公开邮箱。
 
-数据备份导出包含正文、讨论及图片清单，不包含图片二进制；图库图片可以另存。在线编辑的数据保存在 D1/R2，不会自动回写 GitHub。当前 GitHub 全量源码同步已按作者要求停止。
+数据备份导出包含正文、讨论及图片清单，不包含图片二进制；图库图片可以另存。在线编辑的数据保存在 D1/R2，不会自动回写 GitHub。
 
 ## 访问权限
 
@@ -33,13 +43,12 @@ GitHub 登录尚未接入；GitHub 仓库授权与本站登录是两件事。游
 - app/：阅读页面、后台、论坛和 API。
 - db/schema.ts 与 drizzle/：数据库结构与迁移。
 - db/seed.json：首次初始化原稿；不会覆盖后续在线编辑。
-- public/assets/screenshots/：保留的原稿截图。
 - content/、theme/、build.py：原 V3.0 静态版源材料；不要用旧 build.py 覆盖当前 Worker 构建结果。
 - tests/：隔离的数据库与 API 验证，不连接线上数据库。
 
 ## 开发与发布
 
-安装依赖：pnpm install。构建：pnpm build。数据库迁移：pnpm db:generate。
+按 `package.json` 的要求使用 Node.js ≥ 22.13.0、pnpm 11.19.0。安装锁定依赖：`pnpm install --frozen-lockfile`；构建：`pnpm build`。已有数据库迁移位于 `drizzle/`；`pnpm db:generate` 仅用于生成新的迁移文件。
 
 服务器环境变量 HANDBOOK_OWNER_EMAIL 由 Sites 保存，用平台验证的所有者邮箱绑定首次管理员登录，随后以站点内稳定用户 ID 授权。不可采用首位访客自动成为管理员的方式。
 
