@@ -1,6 +1,7 @@
 import {screenshotReleases,screenshotUpdates,fillScreenshotBlocks,applyScreenshotRevision} from '../lib/screenshot-release';
 import assert from 'node:assert/strict';
-import {existsSync} from 'node:fs';
+import {publicChapterHtml} from '../lib/legacy-images';
+import {checkLegacyProjection,checkLegacyReaders,checkLegacyWrites,checkPendingReleaseRead} from './legacy-images';
 import {fifthChapter,fifthChapterBlocks} from '../lib/chapter-five';
 import {FIFTH_CHAPTER_REVISION,fifthChapterBackupKey,applyFifthChapterRevision,renumberedModels,supplementedAppendix} from '../lib/chapter-five-release';
 import {GET,POST,PUT,DELETE} from '../app/api/[...path]/route';
@@ -44,7 +45,14 @@ const liveFifth=sqlite.prepare("SELECT * FROM chapters WHERE id='practice'").get
 assert.equal(liveFifth.title,fifthChapter.title);assert.equal(liveFifth.body,cleanHtml(fifthChapter.body));
 assert.equal(liveFifth.published_body,liveFifth.body);assert.equal(liveFifth.version,2);
 const shots=fifthChapterBlocks.filter(b=>b.kind==='screenshot');
-assert.equal(shots.length,10);assert(shots.every(b=>b.src&&existsSync('public'+b.src)));
+assert.equal(shots.length,10);
+const publishedFifth=publicChapterHtml(String(liveFifth.published_body),root);
+assert(!publishedFifth.includes('/assets/screenshots/'));
+for(const shot of shots) {
+ assert(shot.src && String(liveFifth.body).includes(shot.src),'retain each original in the editor');
+ assert(!publishedFifth.includes('data-block-id="'+shot.id+'"'),'remove each retired figure, including its caption');
+}
+assert(publishedFifth.includes('id="s-903"') && publishedFifth.includes('id="s-1001"'),'chapter headings survive');
 assert(!fifthChapterBlocks.some(b=>b.kind==='legacy'));assert(!String(liveFifth.body).includes('截图待补充'));
 assert.equal(fifthChapterBlocks.filter(b=>b.kind==='heading'&&b.level===2).length,6);
 assert.equal(new Set(fifthChapterBlocks.map(b=>b.id)).size,fifthChapterBlocks.length);
@@ -108,9 +116,14 @@ assert.equal(JSON.parse(String(sqlite.prepare('SELECT value FROM settings WHERE 
 assert.equal(JSON.parse(String(sqlite.prepare('SELECT value FROM settings WHERE key=?').get(THIRD_SUPPLEMENT_BACKUP)!.value)).body,cleanHtml(previousThirdChapter.body));
 await call('chapters');assert.equal(sqlite.prepare("SELECT version FROM chapters WHERE id='getting-started'").get()!.version,4);
 
-// Source images must resolve locally; unchanged modules retain their IDs and layout.
+// Each retired release block is filtered on read; original data and unaffected modules survive.
 assert.equal(Object.keys(screenshotUpdates).length,9);
-for(const shot of Object.values(screenshotUpdates))assert(shot.src&&existsSync('public'+shot.src));
+for(const [id,shot] of Object.entries(screenshotUpdates)) {
+ const block=renderBlock({id,kind:'screenshot',...shot});
+ assert(shot.src && cleanHtml(block).includes(shot.src));
+ assert.equal(publicChapterHtml(block,root),'',id+' must not leave an empty frame or caption');
+}
+checkLegacyProjection();
 for(const r of screenshotReleases){
  const row=sqlite.prepare('SELECT * FROM chapters WHERE id=?').get(r.original.id)!;
  assert.equal(row.body,cleanHtml(r.next.body));
@@ -126,6 +139,8 @@ await call('admin/chapters','GET',null,{},401);
 await call('admin/chapters','GET',null,reader,403);
 await call('admin/chapters','POST',{},owner,403,'https://evil.test');
 assert.equal((await call('me','GET',null,owner)).user.admin,true);
+await checkLegacyReaders(call,owner,reader);
+await checkLegacyWrites(call,owner,reader);
 const spoofed={'oai-authenticated-user-id':'other-id','oai-authenticated-user-email':'owner@handbook.test'};
 assert.equal((await call('me','GET',null,spoofed)).user.admin,false);
 const chapters=(await call('admin/chapters','GET',null,owner)).items;
@@ -350,6 +365,7 @@ assert.equal(sqlite.prepare("SELECT body FROM chapters WHERE id='getting-started
 sqlite.prepare('INSERT OR IGNORE INTO settings (key,value) VALUES (?,?)').run(FIRST_CHAPTER_REVISION,'already-applied');
 const priorHtml=cleanHtml(previousFirstChapter.body);
 sqlite.prepare("UPDATE chapters SET title=?,description=?,body=?,published_title=?,published_description=?,published_body=?,version=2 WHERE id='getting-started'").run(previousFirstChapter.title,previousFirstChapter.description,priorHtml,previousFirstChapter.title,previousFirstChapter.description,priorHtml);
+await checkPendingReleaseRead(call,owner);
 await applyFirstChapterRevision(database());
 const upgraded=sqlite.prepare("SELECT * FROM chapters WHERE id='getting-started'").get()!;
 assert.equal(upgraded.version,3);assert.equal(upgraded.body,cleanHtml(firstChapter.body));assert.equal(upgraded.published_body,upgraded.body);
@@ -411,4 +427,4 @@ const concurrentDb={prepare:db.prepare.bind(db),batch:(stmts:any[])=>{
 await Promise.all([applyFifthChapterRevision(concurrentDb),applyFifthChapterRevision(concurrentDb)]);
 for(const id of releaseIds)assert.equal(sqlite.prepare('SELECT version FROM chapters WHERE id=?').get(id)!.version,2);
 assert.equal((await call('topics?chapter=practice')).items.find((t:any)=>t.id==='practice-move-topic').chapter_id,'practice');
-console.log('PASS: '+checks+' API checks; owner/member/guest permissions, pending visibility, moderation, signed cookies, rate limits, atomic content migration, chapters and media.');
+console.log('PASS: '+checks+' API checks; owner/member/guest permissions, pending visibility, moderation, signed cookies, rate limits, atomic content migration, chapters/media, legacy-image projection, preview isolation and write guards.');

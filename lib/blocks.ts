@@ -27,22 +27,34 @@ export function renderBlock(b:Block) {
  }
 }
 export const renderBlocks=(blocks:Block[])=>blocks.map(renderBlock).join('\n');
-export function parseBlocks(html:string,parser:DOMParser):Block[] {
- const doc=parser.parseFromString(html,'text/html'), seen=new Set<string>();
- return Array.from(doc.body.childNodes).filter(n=>n.nodeType===1||(n.nodeType===3&&n.textContent?.trim())).map(node=>{
+export function parseBlocks(html:string,parser:DOMParser|HTMLTemplateElement):Block[] {
+ let root:DocumentFragment|HTMLElement;
+ if('content' in parser){parser.innerHTML=html;root=parser.content;}
+ else{root=parser.parseFromString(html,'text/html').body;}
+ const seen=new Set<string>();
+ return Array.from(root.childNodes).filter(n=>n.nodeType===1||(n.nodeType===3&&n.textContent?.trim())).map(node=>{
   const el=node.nodeType===1?node as HTMLElement:null, marked=el?.getAttribute('data-content-block');
   const kind=marked&&Object.hasOwn(blockLabels,marked)?marked as BlockKind:'legacy';
   let id=el?.getAttribute('data-block-id')||crypto.randomUUID();if(seen.has(id))id=crypto.randomUUID();seen.add(id);
   const get=(selector:string)=>el?.querySelector(selector)?.textContent||'';
   const b:Block={id,kind};
-  if(kind==='legacy')return {...b,html:el?.outerHTML||`<p>${escapeHtml(node.textContent)}</p>`};
+  // Do not collapse a mixed historical figure to one source, or drop embedded media
+  // from another structured block when the author edits a neighbouring paragraph.
+  const media=el ? el.querySelectorAll('img,.hb-shot-placeholder').length+Number(el.matches('img,.hb-shot-placeholder')) : 0;
+  if(kind==='legacy'||(kind==='screenshot'?media>1:media>0))return {...b,kind:'legacy',html:el?.outerHTML||`<p>${escapeHtml(node.textContent)}</p>`};
   if(kind==='heading')return {...b,title:el!.textContent||'',level:el!.tagName==='H3'?3:2,anchor:el!.id};
   if(kind==='text')return {...b,text:el!.textContent||''};
   if(kind==='note'||kind==='link')return {...b,title:get('.hb-title'),text:get('.hb-text'),...(kind==='link'?{href:el!.querySelector('a')?.getAttribute('href')||''}:{})};
   if(kind==='prompt')return {...b,title:get('.hb-title'),text:get('code')};
   if(kind==='steps'||kind==='list')return {...b,items:Array.from(el!.children).map(li=>({title:li.querySelector('.hb-title')?.textContent||'',text:kind==='steps'?li.querySelector('.hb-text')?.textContent||'':li.textContent||''}))};
   if(kind==='table')return {...b,headers:Array.from(el!.querySelectorAll('thead th')).map(n=>n.textContent||''),rows:Array.from(el!.querySelectorAll('tbody tr')).map(tr=>Array.from(tr.querySelectorAll('td')).map(n=>n.textContent||''))};
-  if(kind==='screenshot')return {...b,title:get('.hb-title'),text:get('.hb-text'),src:el!.querySelector('img')?.getAttribute('src')||'',caption:get('figcaption')};
+  if(kind==='screenshot'){
+   const shot={...b,title:get('.hb-title'),text:get('.hb-text'),src:el!.querySelector('img')?.getAttribute('src')||'',caption:get('figcaption')};
+   // A nested link, extra paragraph, author-provided attributes, or different
+   // markup must survive edits elsewhere. Only use fields when the DOM round-trips.
+   const canonical=el!.ownerDocument.createElement('template');canonical.innerHTML=renderBlock(shot);
+   return canonical.content.firstElementChild?.isEqualNode(el) ? shot : {...b,kind:'legacy',html:el!.outerHTML};
+  }
   return b;
  });
 }

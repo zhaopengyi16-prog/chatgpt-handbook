@@ -6,10 +6,12 @@ import {api} from '../shared';
 import {Confirm} from '../confirm';
 import {toast} from 'sonner';
 import BlockEditor from './block-editor';
+import {retiredUrl} from './legacy-image-editor';
 import {newBlock,renderBlocks} from '@/lib/blocks';
 type Row=Record<string,any>;
 function MediaTile({item,busy,onCaption,onDelete,onInsert}:{item:Row,busy:boolean,onCaption:(id:string,caption:string)=>void,onDelete:(m:Row)=>void,onInsert?:(m:Row)=>void}){
  const [caption,setCaption]=useState(item.caption);
+ if(retiredUrl(item.url))return <div className="media-card"><div className="details"><span className="badge">已下线</span><p>{item.name}</p>{item.caption&&<p>{item.caption}</p>}<p className="muted">旧截图仅保留记录，不能再插入正文。</p></div></div>;
  return <div className="media-card"><a href={item.url} target="_blank" rel="noreferrer"><img src={item.url} alt={item.caption} loading="lazy"/></a><div className="details"><p>{item.name}</p><label className="field"><span>图片说明</span><input value={caption} maxLength={300} onChange={e=>setCaption(e.target.value)}/></label><div className="row-actions">{onInsert&&<Button disabled={busy} onClick={()=>onInsert({...item,caption})}>用于正文</Button>}<Button variant="outline" disabled={busy} onClick={()=>onCaption(item.id,caption)}>保存说明</Button><Button variant="ghost" disabled={busy} onClick={()=>onDelete(item)}>删除</Button></div></div></div>;
 }
 export default function Admin(){
