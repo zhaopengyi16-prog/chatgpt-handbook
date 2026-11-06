@@ -55,6 +55,21 @@ const chapterPage=(id:string,preview=false)=>ChapterPage({params:Promise.resolve
 const html=async(page:Promise<React.ReactNode>)=>renderToStaticMarkup(await page);
 const browserAs=(who:HeadersInit={})=>{const h=new Headers(who);h.set('host','handbook.test');setHeaders(h);};
 
+// Before the owner enables categories, public readers should see the v15 entry points.
+async function expectOriginalHome() {
+  browserAs();
+  const page=await html(Home(pageProps()));
+  assert(page.includes('把 AI 用在') && page.includes('你想完成的事情上。'));
+  assert(page.includes('学习目录') && page.includes('7 个章节 · 持续更新'));
+  assert(page.includes('href="/chapters/getting-started.html">开始阅读</a>'));
+  assert(page.includes('href="/community">参与讨论</a>'));
+  assert(page.includes('id="all-chapters"'));
+  assert.deepEqual(Array.from(page.matchAll(/class="chapter-card" href="([^"]+)"/g),m=>m[1]),
+    oldIds.map(id=>'/chapters/'+id+'.html'));
+  assert(!page.includes('你想做什么？') && !page.includes('筛选教程'));
+  assert(!(await html(chapterPage('desktop'))).includes('aria-label="面包屑"'));
+}
+
 // Missing/corrupt settings fail closed. Reads, invalid methods, blocked identities and errors never seed.
 const initial=await expect(api('chapters','GET',null,{}));
 assert.deepEqual(initial.items.map((x:any)=>x.id),oldIds);
@@ -62,6 +77,7 @@ await expect(api('me')); // claim the synthetic owner on the isolated test site
 const before=rows();
 assert.equal((await expect(api(admin))).state,'missing');
 assert.equal((await readPublicCatalog(root)).ready,false);
+await expectOriginalHome();
 for(const [who,status] of [[{},401],[member,403]] as const) {
   for(const method of ['GET','POST','PUT','DELETE'] as const)
     await expect(api(admin,method,['POST','PUT'].includes(method)?{action:'initialize'}:null,who),status);
@@ -74,6 +90,7 @@ for(const invalid of ['not json',JSON.stringify({schema:99,revision:1})]){
   assert.equal((await expect(api(admin))).state,'invalid');
   const fallback=await readPublicCatalog(root);
   assert.equal(fallback.ready,false);assert.deepEqual(fallback.chapters.map(c=>c.id),oldIds);
+  await expectOriginalHome();
   await expect(init(),409);assert.equal(raw(),invalid);assert.deepEqual(rows(),before);
   sqlite.prepare('DELETE FROM settings WHERE key=?').run(key);
 }
@@ -165,6 +182,8 @@ for(const [topic,moderation,hidden,time] of [['old-public','approved',0,'2098'],
     .run(topic,topic,'fixture','使用求助','test-reader','reader',time,time,moderation,hidden);
 }
 const home=await html(Home(pageProps()));assert(!home.includes('pending-only')&&!home.includes('hidden-only'));
+assert(home.includes('你想做什么？') && home.includes('/learn/coding') && home.includes('/learn/engineering'));
+assert(!home.includes('开始阅读</a>'));
 assert(home.includes('old-public')&&home.indexOf('new-public')>=0&&home.indexOf('new-public')<home.indexOf('old-public'));
 browserAs(owner);
 assert((await html(chapterPage(starterIds[0],true))).includes(draftTitles[0]));
