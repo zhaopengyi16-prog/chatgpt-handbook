@@ -32,5 +32,8 @@ export async function identity() {
 }
 export async function publicChapters() {
   await ensureSeed();
+  return listPublishedChapters();
+}
+export async function listPublishedChapters() {
   return (await database().prepare('SELECT id,published_title AS title,published_description AS description,published_position AS position,published_at FROM chapters WHERE published_body IS NOT NULL AND deleted_at IS NULL ORDER BY published_position,id').all()).results;
 }

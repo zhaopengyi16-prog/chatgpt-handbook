@@ -2,9 +2,14 @@ import { env } from 'cloudflare:workers';
 import { database, ensureSeed, identity, publicChapters } from '@/lib/data';
 import { guestIdentity, guestCookie, allowGuestSubmission } from '@/lib/guests';
 import { cleanHtml, CATEGORIES } from '@/lib/content';
+import { addedLegacyImageReferences, publicChapterHtml } from '@/lib/legacy-images';
+import { isLegacyImageUrl } from '@/lib/legacy-image-url';
 export const dynamic = 'force-dynamic';
 class HttpError extends Error { constructor(public status:number, message:string) { super(message); } }
 function fail(status:number,message:string): never { throw new HttpError(status,message); }
+function assertLegacyReferencesNotAdded(previous:string, next:string, origin:string) {
+ if(addedLegacyImageReferences(previous,next,origin)) fail(400,'旧截图已下线，不能新增引用。请上传新图或从图库选择可用图片。');
+}
 function text(v:unknown,max:number,optional=false) { if(typeof v!=='string'||v.length>max||(!optional&&!v.trim())) fail(400,'请检查必填内容和长度。'); return v.trim(); }
 function identifier(v:unknown) { const s=text(v,80); if(!/^[a-z0-9-]+$/.test(s)) fail(400,'编号只能包含小写字母、数字和短横线。'); return s; }
 function number(v:unknown,min=0,max=10000) { if(typeof v!=='number'||!Number.isInteger(v)||v<min||v>max) fail(400,'数值不正确。'); return v; }
@@ -19,7 +24,12 @@ async function handle(req:Request, parts:string[]) {
  try {
   const db=database(), method=req.method, url=new URL(req.url), adminPath=parts[0]==='admin';
   if(!['GET','HEAD'].includes(method) && req.headers.get('origin')!==url.origin) fail(403,'请求来源不正确，请从网站页面重新操作。');
-  await ensureSeed();
+  const readerPreview = adminPath && parts[1]==='reader-preview' && parts.length===2 && method==='POST';
+  // Reader hydration and retained R2 images must not replay historical content releases.
+  // These read paths still pass all existing identity and permission checks.
+  const readerIdentity = parts.length===1 && parts[0]==='me' && method==='GET';
+  const readerMedia = parts.length===2 && parts[0]==='media' && method==='GET';
+  if(!readerPreview && !readerIdentity && !readerMedia) await ensureSeed();
   const user=await identity();
   if(adminPath && !user?.admin) fail(user?403:401,'请使用站点所有者账号登录后台。');
   const guestPost = !user && !adminPath && method==='POST' && parts.length===1 && ['topics','replies'].includes(parts[0]);
@@ -41,13 +51,16 @@ async function handle(req:Request, parts:string[]) {
     return response;
   }
   if(parts[0]==='chapters' && method==='GET') return json({items:await publicChapters()});
+  if(readerPreview) return json({html:publicChapterHtml(text(body.body,500000,true),url.origin)});
   if(adminPath && parts[1]==='chapters') {
     const id=parts[2];
     if(method==='GET') return json({items:(await db.prepare('SELECT * FROM chapters ORDER BY position,id').all()).results});
     if(method==='POST' && !id) {
       const newId=identifier(body.id);
       if(await db.prepare('SELECT id FROM chapters WHERE id=?').bind(newId).first()) fail(409,'编号已存在，请换一个编号。');
-      await db.prepare('INSERT INTO chapters (id,title,description,body,position,updated_at) VALUES (?,?,?,?,?,?)').bind(newId,text(body.title,120),text(body.description||'',500,true),cleanHtml(text(body.body||'<p>开始编写正文。</p>',500000)),number(body.position||9,1),now).run();
+      const html=cleanHtml(text(body.body||'<p>开始编写正文。</p>',500000));
+      assertLegacyReferencesNotAdded('',html,url.origin);
+      await db.prepare('INSERT INTO chapters (id,title,description,body,position,updated_at) VALUES (?,?,?,?,?,?)').bind(newId,text(body.title,120),text(body.description||'',500,true),html,number(body.position||9,1),now).run();
       return json({id:newId},201);
     }
     const row:any=await db.prepare('SELECT * FROM chapters WHERE id=?').bind(id||'').first();
@@ -57,6 +70,8 @@ async function handle(req:Request, parts:string[]) {
       let result;
       if(action==='save'||action==='publish') {
         const title=text(body.title,120), description=text(body.description||'',500,true), html=cleanHtml(text(body.body,500000)), position=number(body.position,1);
+        if(row.version!==version||row.deleted_at!==null) fail(409,'该章节已在另一窗口更新，请保留本页内容，刷新列表后重新打开。');
+        assertLegacyReferencesNotAdded(row.body,html,url.origin);
         result= action==='publish'
           ? await db.prepare('UPDATE chapters SET title=?,description=?,body=?,position=?,published_title=?,published_description=?,published_body=?,published_position=?,published_at=?,updated_at=?,version=version+1 WHERE id=? AND version=? AND deleted_at IS NULL').bind(title,description,html,position,title,description,html,position,now,now,id,version).run()
           : await db.prepare('UPDATE chapters SET title=?,description=?,body=?,position=?,updated_at=?,version=version+1 WHERE id=? AND version=? AND deleted_at IS NULL').bind(title,description,html,position,now,id,version).run();
@@ -97,6 +112,7 @@ async function handle(req:Request, parts:string[]) {
     if(!item) fail(404,'图片不存在。');
     if(method==='PUT') { await db.prepare('UPDATE media SET caption=? WHERE id=?').bind(text(body.caption,300),id).run(); return json({ok:true}); }
     if(method==='DELETE') {
+      if(isLegacyImageUrl(item.url,url.origin)) fail(409,'旧截图已下线，保留图库记录，不能删除。');
       const used=await db.prepare('SELECT title FROM chapters WHERE instr(body,?)>0 OR instr(COALESCE(published_body,\'\'),?)>0 LIMIT 1').bind(item.url,item.url).first<{title:string}>();
       if(used) fail(409,'图片仍被「'+used.title+'」引用，请先在正文中移除或替换并发布。');
       if(item.object_key) { if(!env.BUCKET) fail(503,'图片存储暂时不可用。'); await env.BUCKET.delete(item.object_key); }
