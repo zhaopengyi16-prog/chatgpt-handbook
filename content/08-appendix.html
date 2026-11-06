@@ -1,0 +1,44 @@
+<h2 id="register">8.1 如何注册与登录</h2>
+<ol><li>从 ChatGPT 正式入口打开注册或登录页面，核对地址。</li><li>使用自己的真实信息，选择当前界面支持的登录方式。</li><li>团队用户接受邀请后，再确认当前工作空间。</li><li>按照页面完成必要验证；无法完成时记录准确提示和所用入口。</li></ol>
+<p><a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">打开 ChatGPT</a></p>
+<p>不要把某一条私人聊天链接当作注册或定价入口。输入密码或验证码前确认页面来自相应服务。</p>
+<h2 id="network">8.2 页面或连接无法打开</h2>
+<ol><li>确认浏览器、客户端版本和当前服务是否可用。</li><li>检查所在地区、组织网络与当前账号的适用条件。</li><li>区分网页打不开、登录失败、文件上传失败和本地工具请求失败。</li><li>团队环境按照已有支持渠道处理；使用本地网关时，按第七章逐层定位。</li></ol>
+<p>只记录问题发生的入口与可见错误，不在公开求助中附带完整代理配置、账号凭据或内部网络信息。</p>
+<h2 id="phone">8.3 电话或其他身份验证失败</h2>
+<p>验证要求会受入口、账号和当前服务规则影响。按照实际页面提供的方式完成，不把某个号码、支付渠道或订阅套餐当作普遍有效的绕过方法。</p>
+<ul><li>核对号码类型、地区和页面提示。</li><li>确认验证码接收与填写流程，避免向他人转发验证码。</li><li>反复失败时停止盲目尝试，整理错误信息并通过官方支持处理。</li></ul>
+<p class="source">参考：<a href="https://learn.chatgpt.com/docs/auth" target="_blank" rel="noopener noreferrer">官方身份验证说明</a></p>
+<h2 id="team">8.4 如何加入与管理团队工作空间</h2>
+<ol><li>由有相应权限的管理员邀请成员。</li><li>成员使用受邀身份接受邀请。</li><li>从账号菜单选择相应工作空间，核对可用功能。</li><li>功能缺失时检查成员身份、角色、套餐和组织设置。</li><li>离开团队或调整访问范围时，由管理员按实际需求处理。</li></ol>
+<p>个人空间与团队空间是不同的使用上下文。个人页面显示的套餐状态，不能单独说明团队权益是否正常。</p>
+<h2 id="payment">8.5 订阅、付款与 API 计费</h2>
+<p>付款方式、币种和可用套餐以本人账号的结算页面为准。不同地区、网页或应用商店入口可能显示不同选项；旧截图不适合作为当前价格保证。</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="计费方式区别"><table><thead><tr><th>方式</th><th>使用前核对</th></tr></thead><tbody><tr><td>个人订阅</td><td>当前档位、续费时间、包含权益和发票入口。</td></tr><tr><td>团队订阅</td><td>工作空间、席位、管理员权限及账单归属。</td></tr><tr><td>API Key</td><td>对应平台的计费账户、使用量和凭据管理。</td></tr></tbody></table></div>
+<p>订阅登录与 API Key 登录不是同一计费方式。改用 API Key 后，应确认适用的平台账单与组织设置。</p>
+<p class="source">参考：<a href="https://learn.chatgpt.com/docs/auth" target="_blank" rel="noopener noreferrer">登录与 API 计费</a> · <a href="https://learn.chatgpt.com/docs/pricing" target="_blank" rel="noopener noreferrer">当前套餐说明</a></p>
+<figure class="shot"><img src="../assets/screenshots/appendix-01.svg" width="1200" height="520" loading="lazy" alt="截图待补充：个人订阅与账单入口"><figcaption>个人订阅与账单入口 · 截图待补充</figcaption></figure>
+<figure class="shot"><img src="../assets/screenshots/appendix-02.svg" width="1200" height="520" loading="lazy" alt="截图待补充：团队订阅与工作空间确认"><figcaption>团队订阅与工作空间确认 · 截图待补充</figcaption></figure>
+<h2 id="usage">8.6 查看额度和选择模型</h2>
+<p>从当前账号的用量面板查看剩余用量与重置时间；Codex CLI 中可通过 <code>/status</code> 查看当前状态。具体入口以所用客户端为准。</p>
+<p>当前官方仍提供按五小时估计的本地消息用量，并提示周限制也可能适用。不要把旧版本的个人观察写成“所有账号都已取消五小时限制”，也不要依赖提前发送一条消息来规避限制。</p>
+<ul><li>简单任务选择能完成要求的模型与强度。</li><li>复杂任务先明确目标与材料范围，避免重复读取无关内容。</li><li>保存阶段结果与交接摘要，减少重复执行。</li><li>接近限制时按当前服务提供的方式等待、调整模型或补充用量。</li></ul>
+<p class="source">参考：<a href="https://learn.chatgpt.com/docs/pricing" target="_blank" rel="noopener noreferrer">用量与限制说明</a></p>
+<figure class="shot"><img src="../assets/screenshots/appendix-03.svg" width="1200" height="520" loading="lazy" alt="截图待补充：账号用量与重置时间"><figcaption>账号用量与重置时间 · 截图待补充</figcaption></figure>
+<figure class="shot"><img src="../assets/screenshots/appendix-04.svg" width="1200" height="520" loading="lazy" alt="截图待补充：Codex CLI 状态查看"><figcaption>Codex CLI 状态查看 · 截图待补充</figcaption></figure>
+<figure class="shot"><img src="../assets/screenshots/appendix-05.svg" width="1200" height="520" loading="lazy" alt="截图待补充：当前模型选择入口"><figcaption>当前模型选择入口 · 截图待补充</figcaption></figure>
+<h2 id="help-template">8.7 一份方便他人回答的问题描述</h2>
+<div class="codebox"><div class="codebar"><span>可复制提问模板</span><button class="copy" type="button">复制</button></div><pre><code>我使用的入口与版本：
+操作系统：
+想完成的任务：
+操作步骤：
+实际表现与完整错误提示（已脱敏）：
+预期结果：
+已经尝试的方法：
+可复现的最小示例：
+
+请先定位问题可能在哪一层，列出判断依据。
+没有证据的原因请标为待确认。</code></pre></div>
+<h2 id="references">8.8 官方文档与参考资料</h2>
+<ul class="reference-list"><li><a href="https://learn.chatgpt.com/docs/get-started-with-work" target="_blank" rel="noopener noreferrer">ChatGPT Work 入门</a></li><li><a href="https://learn.chatgpt.com/docs/auth" target="_blank" rel="noopener noreferrer">登录与身份验证</a></li><li><a href="https://learn.chatgpt.com/docs/pricing" target="_blank" rel="noopener noreferrer">套餐与用量</a></li><li><a href="https://learn.chatgpt.com/docs/agent-configuration/agents-md" target="_blank" rel="noopener noreferrer">AGENTS.md</a></li><li><a href="https://learn.chatgpt.com/docs/skills-and-plugins" target="_blank" rel="noopener noreferrer">Skills 与 Plugins</a></li><li><a href="https://learn.chatgpt.com/docs/plugins" target="_blank" rel="noopener noreferrer">插件安装与支持范围</a></li><li><a href="https://learn.chatgpt.com/docs/permissions" target="_blank" rel="noopener noreferrer">权限设置</a></li><li><a href="https://git-scm.com/docs" target="_blank" rel="noopener noreferrer">Git 文档</a></li><li><a href="https://cli.github.com/" target="_blank" rel="noopener noreferrer">GitHub CLI</a></li><li><a href="https://github.com/lidge-jun/opencodex" target="_blank" rel="noopener noreferrer">OpenCodex 项目</a></li><li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener noreferrer">DeepSeek 文档</a></li></ul>
+<p>产品信息核对日期：2026-09-10。界面、套餐和第三方命令可能变化；提交更新时，请附上对应版本与原始来源。</p>

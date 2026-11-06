@@ -1,0 +1,569 @@
+<p>本章介绍通过 OpenCodex 接入多个模型的方法，保留部署步骤和故障排查案例。准备直接实践的读者可从 7.4 节开始。</p>
+<p class="lead">Codex 与 OpenCodex 多模型部署及故障排查指南</p>
+<h2 id="s-1019">7.1 文档目标与适用范围</h2>
+<p>文档采用以下组织原则：</p>
+<p>标准部署流程应注明经过验证的系统、组件版本与检查结果。当前章节保留架构与验收方法，具体命令按所用版本确认。</p>
+<ol><li>安装、服务、路由和 Provider 配置分层说明。</li><li>验收过程由底层向上逐级执行。</li><li>故障排查统一采用“现象、判断、原因、处理、验证、预防”结构。</li><li>未经充分证据确认的原因不得写成确定性结论。</li></ol>
+<p>本方案涉及以下四个层级：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>安装层
+  Node.js、npm、Codex CLI、OpenCodex
+
+服务层
+  OpenCodex 服务状态、开机启动、配置加载
+
+路由层
+  Codex 请求是否进入 127.0.0.1:10100
+
+Provider 层
+  OpenAI、DeepSeek、Claude 的认证、路由和模型映射</code></pre></div>
+
+<h2 id="s-1029">7.2 方案架构</h2>
+<h3 id="s-1030">7.2.1  总体架构</h3>
+<p>本方案使用官方 Codex App 或 Codex CLI 作为操作界面，通过本地 OpenCodex 网关访问不同的模型供应商。</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Codex App / Codex CLI
+          │
+          ▼
+http://127.0.0.1:10100
+          │
+          ▼
+      OpenCodex
+      ├─ OpenAI
+      ├─ DeepSeek
+      ├─ Claude
+      └─ 其他 Provider</code></pre></div>
+<p>各组件职责如下：</p>
+<ul><li>Codex App / Codex CLI：提供官方 Codex 操作界面和命令行能力。</li><li>OpenCodex：负责模型目录管理、请求路由和协议转换。</li><li>Provider：提供具体模型和推理服务。</li></ul>
+<p>需要注意：</p>
+<ul><li>Codex App 仍然是官方客户端。</li><li>OpenCodex 位于 Codex 与模型供应商之间。</li><li>启用 OpenCodex 后，请求不再属于纯官方直连链路。</li></ul>
+<p>恢复官方直连时，按当前 OpenCodex 文档停止代理并检查恢复后的客户端配置与实际请求链路。</p>
+
+<h2 id="s-1043">7.3 DeepSeek 接入方式选择</h2>
+<p>可以选择供应商提供的接入方式，也可以采用第三方本地网关。先确认当前文档、支持入口和自己能维护的组件。</p>
+<h3 id="s-1045">7.3.1  方案 A：供应商直接接入</h3>
+<p>架构如下：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Codex
+  │
+  ▼
+DeepSeek API</code></pre></div>
+<p>适用特点：</p>
+<p>认证通常采用供应商支持的方式；是否需要 ChatGPT 登录，按实际入口与配置确认。</p>
+<ul><li>配置步骤较少。</li><li>请求链路较短。</li><li>适合主要或仅使用 DeepSeek 的场景。</li><li>切换回 GPT 时，通常需要恢复或重新修改 Codex 配置。</li><li>不适合作为多个模型供应商的统一管理入口。</li></ul>
+<div class="callout">原稿提到的 DeepSeek 专用脚本页面本次未能成功核对，以下仅保留方案比较，不把旧脚本当作已验证的安装方法。</div><p class="source">参考：<a href="https://api-docs.deepseek.com/" target="_blank" rel="noopener noreferrer">DeepSeek 文档入口</a></p>
+<h3 id="s-1056">7.3.2  方案 B：OpenCodex 多模型网关</h3>
+<p>架构如下：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Codex
+  │
+  ▼
+OpenCodex
+  ├─ GPT
+  ├─ DeepSeek
+  ├─ Claude
+  └─ 其他模型</code></pre></div>
+<figure class="shot"><img src="../assets/screenshots/models-01.svg" width="1200" height="520" loading="lazy" alt="截图待补充：3.2 方案 B：OpenCodex 多模型网关：操作示意"><figcaption>3.2 方案 B：OpenCodex 多模型网关：操作示意 · 截图待补充</figcaption></figure>
+<p>适用特点：</p>
+<ul><li>可以保留 GPT 的 ChatGPT 订阅链路。</li><li>DeepSeek、Claude 等模型可以使用各自的 API Key 或 OAuth 凭据。</li><li>可以通过同一个 Codex 模型选择器切换模型。</li><li>适合不同模型分工协作。</li><li>需要维护本地服务、Provider 配置和模型目录。</li></ul>
+<h3 id="s-1066">7.3.3  选择建议</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="可横向滚动的表格"><table><thead><tr><th scope="col">使用需求</th><th scope="col">推荐方式</th></tr></thead><tbody><tr><td>仅使用 DeepSeek</td><td>供应商当前支持的直接接入方式</td></tr><tr><td>经常在 GPT 与 DeepSeek 之间切换</td><td>OpenCodex</td></tr><tr><td>规划、执行与复核使用不同模型</td><td>OpenCodex</td></tr><tr><td>优先考虑最低维护成本</td><td>供应商当前支持的直接接入方式</td></tr><tr><td>公司统一管理多个模型供应商</td><td>OpenCodex 或企业统一网关</td></tr></tbody></table></div>
+
+<p>两种方案的定位区别如下：</p>
+<div class="callout">直接接入减少链路组件；本地网关便于统一管理多个供应商，但需要维护服务、认证与模型路由。</div>
+
+<h2 id="s-1072">7.4 标准部署流程</h2>
+<div class="callout">本节给出安装与验收顺序。当前公开版尚未完成各客户端版本的实机复测；涉及旧版服务和同步命令的部分，按实际版本帮助确认。</div><p class="source">参考：<a href="https://github.com/lidge-jun/opencodex" target="_blank" rel="noopener noreferrer">OpenCodex 当前 README</a></p>
+<h3 id="s-1074">7.4.1  检查基础环境</h3>
+<p>在 PowerShell 中执行：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>node -v
+npm -v
+codex --version
+ocx --version</code></pre></div>
+<p>应确认以下组件均可正常执行：</p>
+<ul><li>Node.js</li><li>npm</li><li>Codex CLI</li><li>OpenCodex CLI</li></ul>
+<p>如果 Codex CLI 或 OpenCodex 尚未安装，应继续执行后续安装步骤。</p>
+<h3 id="s-1083">7.4.2  安装 Codex CLI</h3>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>npm install -g @openai/codex</code></pre></div>
+<p>安装完成后验证：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>codex --version</code></pre></div>
+<h3 id="s-1087">7.4.3  安装 OpenCodex</h3>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>npm install -g @bitkyc08/opencodex</code></pre></div>
+<p>安装完成后验证：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>ocx --version</code></pre></div>
+<h3 id="s-1091">7.4.4  启动代理并初始化</h3>
+<p>当前项目文档区分启动与初始化：ocx start（或服务方式）启动代理；ocx init 写入配置，初始化本身不启动代理。</p><div class="codebox"><div class="codebar"><span>当前文档中的命令</span><button type="button" class="copy">复制</button></div><pre><code>ocx start
+# 在另一个终端中按需初始化
+ocx init
+ocx status</code></pre></div>
+<ul><li>OpenAI 或 ChatGPT 登录方式。</li><li>本地监听端口，建议使用 10100。</li><li>Codex Home 目录。</li><li>是否安装后台服务。</li><li>默认 Provider 和默认模型。</li></ul>
+<p>初始化完成后，应确认 OpenCodex 配置文件已经生成。</p>
+<h3 id="s-1099">7.4.5  安装并启动后台服务</h3>
+<p>如需后台服务，先查看当前版本支持的服务操作及安装方式：</p>
+<div class="codebox"><div class="codebar"><span>先检查当前版本</span><button type="button" class="copy">复制</button></div><pre><code>ocx service --help
+ocx status</code></pre></div>
+<p>正常状态应包含：</p>
+<div class="codebox"><div class="codebar"><span>验收目标</span><button type="button" class="copy">复制</button></div><pre><code>代理处于运行状态
+本地健康检查通过
+实际监听地址与客户端配置一致</code></pre></div>
+<p>如果服务未运行，应优先解决服务层问题，不要直接进入 Codex App 测试。</p>
+<h3 id="s-1105">7.4.6  添加第三方 Provider</h3>
+<p>以 DeepSeek 为例：</p>
+<div class="codebox"><div class="codebar"><span>按交互提示添加 Provider</span><button type="button" class="copy">复制</button></div><pre><code>ocx provider add deepseek</code></pre></div>
+<p>在服务提供的凭据输入界面填写 API Key。不要把真实值放到聊天或公开命令中。命令参数和安全输入方式按当前版本帮助确认。</p>
+<p>完成后执行：</p>
+<div class="codebox"><div class="codebar"><span>检查已配置的供应商</span><button type="button" class="copy">复制</button></div><pre><code>ocx provider list</code></pre></div>
+<p>应确认 DeepSeek 位于已配置的 Provider 列表中，而不仅是出现在可用 Provider 注册表中。</p>
+<h3 id="s-1112">7.4.7  重启服务并加载最新配置</h3>
+<p>配置变更后检查运行实例是否已加载新配置。若需要重启，使用所安装版本支持的服务管理方式。</p>
+<div class="codebox"><div class="codebar"><span>查询服务操作并检查状态</span><button type="button" class="copy">复制</button></div><pre><code>ocx service --help
+ocx status</code></pre></div>
+<p>原因如下：</p>
+<p>Provider 配置虽然已经写入配置文件，但正在运行的后台进程可能仍然保留旧的内存配置。重启服务可以确保最新的 Provider、认证信息和模型映射被重新加载。</p>
+<p>不要把服务安装当作每次配置更新后的常规步骤。先查看所用版本支持的操作：</p>
+<div class="codebox"><div class="codebar"><span>确认服务管理方式</span><button type="button" class="copy">复制</button></div><pre><code>ocx service --help</code></pre></div>
+<p>重新安装服务可能重新生成服务启动脚本，并覆盖已有的本地调整。仅在服务未安装或服务定义损坏时，才应重新执行安装操作。</p>
+<h3 id="s-1120">7.4.8  同步模型目录</h3>
+<p>确认模型目录已同步到当前客户端，具体同步动作以所用版本帮助与界面为准：</p>
+<div class="codebox"><div class="codebar"><span>查看当前命令与状态</span><button type="button" class="copy">复制</button></div><pre><code>ocx --help
+ocx status</code></pre></div>
+<p>然后检查 Codex 配置：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>Select-String `
+  -Path &quot;$HOME\.codex\config.toml&quot; `
+  -Pattern &#x27;openai_base_url|model_catalog_json&#x27;</code></pre></div>
+<p>正常配置示例：</p>
+<div class="codebox"><div class="codebar"><span>TOML 示例</span><button type="button" class="copy">复制</button></div><pre><code>model_catalog_json = &quot;C:\\Users\\&lt;USER_NAME&gt;\\.codex\\opencodex-catalog.json&quot;
+openai_base_url = &quot;http://127.0.0.1:10100/v1&quot;</code></pre></div>
+<p>其中 &lt;USER_NAME&gt; 应为当前 Windows 用户名。</p>
+
+<h2 id="s-1129">7.5 分层验收流程</h2>
+<p>安装完成后，不应直接以 Codex App 的运行结果作为唯一验收依据。</p>
+<p>正确方式是从服务层、Provider 层和网关层开始，逐级向上验证。只有当前层级验证成功后，才进入下一层级。</p>
+<h3 id="s-1132">7.5.1  第一级：服务健康检查</h3>
+<p>执行：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>ocx status</code></pre></div>
+<p>必须确认：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Proxy: running
+Health: ok</code></pre></div>
+<p>如果 Proxy 未运行或健康检查失败，应先处理 OpenCodex 服务问题。</p>
+<h3 id="s-1138">7.5.2  第二级：Provider 配置检查</h3>
+<p>执行：</p>
+<div class="codebox"><div class="codebar"><span>检查供应商</span><button type="button" class="copy">复制</button></div><pre><code>ocx provider list</code></pre></div>
+<p>DeepSeek 配置应包含与以下内容等效的信息：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>adapter: openai-chat
+authMode: key
+baseUrl: https://api.deepseek.com</code></pre></div>
+<p>重点确认：</p>
+<ul><li>Provider 已配置。</li><li>Provider 名称正确。</li><li>认证模式为 API Key。</li><li>Base URL 指向正确的供应商地址。</li><li>API Key 已成功写入或关联。</li></ul>
+<h3 id="s-1149">7.5.3  第三级：直接测试本地网关</h3>
+<p>使用 PowerShell 直接请求 OpenCodex：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>$body = @{
+    model  = &quot;deepseek/deepseek-chat&quot;
+    input  = &quot;只回复 OK&quot;
+    stream = $false
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri &quot;http://127.0.0.1:10100/v1/responses&quot; `
+    -Method Post `
+    -ContentType &quot;application/json&quot; `
+    -Body $body</code></pre></div>
+<p>成功结果应包含：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>status : completed
+model  : deepseek-chat</code></pre></div>
+<p>本层测试绕过了 Codex App 和 Codex CLI，可以直接验证：</p>
+<ul><li>请求是否能够到达 OpenCodex。</li><li>OpenCodex 是否正确识别模型名称。</li><li>Provider 是否被正确加载。</li><li>API Key 是否有效。</li><li>模型路由是否正确。</li><li>供应商接口是否能够正常返回结果。</li></ul>
+<p>如果本层失败，不应继续排查 Codex App。</p>
+<h3 id="s-1162">7.5.4  第四级：Codex CLI 测试</h3>
+<p>执行：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>codex -m &quot;deepseek/deepseek-chat&quot; &quot;只回复 OK&quot;</code></pre></div>
+<p>应确认：</p>
+<ul><li>Codex CLI 可以访问本地 OpenCodex 网关。</li><li>指定的模型名称可以被正确识别。</li><li>请求可以正常完成。</li></ul>
+<p>如果本地网关测试成功，但 Codex CLI 测试失败，应重点检查：</p>
+<ul><li>$HOME\.codex\config.toml</li><li>openai_base_url</li><li>model_catalog_json</li><li>系统代理和 NO_PROXY</li><li>Codex CLI 是否读取了正确的用户配置目录</li></ul>
+<h3 id="s-1175">7.5.5  第五级：Codex App 测试</h3>
+<p>完成前四级验证后：</p>
+<ol><li>完全关闭 Codex App。</li><li>重新启动 Codex App。</li><li>在模型选择器中选择：</li></ol>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>deepseek/deepseek-chat</code></pre></div>
+<ol><li>发送简单测试任务，例如：</li></ol>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>只回复 OK</code></pre></div>
+<p>如果模型目录已更新但 Codex App 中没有显示新模型，应重新启动 App，必要时再次执行：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>ocx --help
+ocx status</code></pre></div>
+<h3 id="s-1185">7.5.6  第六级：确认实际 Provider 和模型</h3>
+<p>不要通过向模型提问以下内容来判断实际模型：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>你是什么模型？</code></pre></div>
+<p>该方法不可靠。Codex App 可能向底层模型注入角色、身份和运行环境提示，因此模型可能回答：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>我是 Codex。</code></pre></div>
+<p>或：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>我是 OpenAI 的编程助手。</code></pre></div>
+<p>正确的确认方式是查看 OpenCodex Dashboard 中记录的实际请求信息：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Provider: deepseek
+Model: deepseek-chat</code></pre></div>
+<p>也可以查看 Provider 日志：</p>
+<div class="codebox"><div class="codebar"><span>查询当前调试与日志命令</span><button type="button" class="copy">复制</button></div><pre><code>ocx debug --help</code></pre></div>
+<p>模型身份应以实际请求日志中的 Provider 和 Model 字段为准。</p>
+
+<h2 id="s-1198">7.6 故障排查</h2>
+<p>每个故障统一包含以下内容：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>故障现象
+判断依据
+直接原因
+处理方法
+验证方法
+预防措施</code></pre></div>
+<h3 id="s-1201">7.6.1  故障 A：访问本地网关时返回 502</h3>
+<h4 id="s-1202">故障现象</h4>
+<p>Codex CLI 或其他客户端返回：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>unexpected status 502 Bad Gateway
+url: http://127.0.0.1:10100/v1/responses</code></pre></div>
+<p>同时可能出现以下情况：</p>
+<ul><li>ocx status 显示 OpenCodex 服务正常。</li><li>OpenCodex Dashboard 中没有对应请求。</li><li>Provider 调试日志中没有请求记录。</li></ul>
+<h4 id="s-1209">判断依据</h4>
+<p>没有对应日志时，先核对日志是否启用、时间范围、服务实例及实际请求地址，再判断请求是否到达。</p>
+<h4 id="s-1211">直接原因</h4>
+<p>本地地址被系统代理接管是一个候选原因，也可能是上游服务、路由或网络故障。以下 NO_PROXY 方法仅用于验证本地地址代理问题。</p>
+<h4 id="s-1213">临时验证方法</h4>
+<p>在当前 PowerShell 会话中设置：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>$env:NO_PROXY = &quot;127.0.0.1,localhost&quot;
+$env:no_proxy = &quot;127.0.0.1,localhost&quot;</code></pre></div>
+<p>然后重新测试：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>codex -m &quot;&lt;MODEL_NAME&gt;&quot; &quot;只回复 OK&quot;</code></pre></div>
+<p>如果设置后请求恢复正常，说明代理绕过配置可能与问题有关；再次复现并结合日志确认，排除同时发生的其他变化。</p>
+<h4 id="s-1219">永久处理方法</h4>
+<p>设置用户级 NO_PROXY 环境变量，并保留已有配置：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>$current = [Environment]::GetEnvironmentVariable(&quot;NO_PROXY&quot;, &quot;User&quot;)
+
+$entries = @()
+
+if ($current) {
+    $entries += $current -split &quot;,&quot;
+}
+
+$entries += &quot;localhost&quot;, &quot;127.0.0.1&quot;, &quot;::1&quot;
+
+$value = (
+    $entries |
+    ForEach-Object { $_.Trim() } |
+    Where-Object { $_ } |
+    Select-Object -Unique
+) -join &quot;,&quot;
+
+[Environment]::SetEnvironmentVariable(
+    &quot;NO_PROXY&quot;,
+    $value,
+    &quot;User&quot;
+)</code></pre></div>
+<p>设置完成后，应关闭并重新打开以下程序，使环境变量生效：</p>
+<ul><li>PowerShell</li><li>Codex CLI 所在终端</li><li>Codex App</li><li>其他调用 OpenCodex 的客户端</li></ul>
+<h4 id="s-1227">验证方法</h4>
+<p>重新执行本地网关测试：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>Invoke-RestMethod `
+    -Uri &quot;http://127.0.0.1:10100/healthz&quot; `
+    -Method Get</code></pre></div>
+<p>然后执行 Codex CLI 测试。</p>
+<h4 id="s-1231">预防措施</h4>
+<p>所有安装了以下软件或配置的计算机，在部署 OpenCodex 前都应检查本地地址代理绕过设置：</p>
+<ul><li>Clash</li><li>VPN 客户端</li><li>企业网络代理</li><li>系统级 HTTP 或 HTTPS 代理</li><li>终端环境变量代理</li></ul>
+<p>本地绕过列表至少应包含：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>localhost
+127.0.0.1
+::1</code></pre></div>
+
+<h3 id="s-1241">7.6.2  故障 B：系统重启后 DeepSeek 模型消失</h3>
+<h4 id="s-1242">故障现象</h4>
+<p>Codex 模型列表中不再显示 DeepSeek。</p>
+<p>执行：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>ocx provider list</code></pre></div>
+<p>已配置列表中只显示：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>openai (default)</code></pre></div>
+<p>而 DeepSeek 仅出现在：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Available from registry</code></pre></div>
+<h4 id="s-1250">判断依据</h4>
+<p>“Available from registry”只表示当前版本的 OpenCodex 支持该 Provider，不表示用户已经完成 Provider 配置。</p>
+<p>只有出现在已配置 Provider 列表中的 Provider 才能被实际使用。</p>
+<h4 id="s-1253">已确认事实</h4>
+<p>发生问题时，本地已配置 Provider 列表中不存在 DeepSeek。</p>
+<p>现有证据不足以进一步确认具体原因属于以下哪一种：</p>
+<ul><li>Provider 配置被覆盖。</li><li>Provider 配置未正确持久化。</li><li>Provider 添加流程未最终完成。</li><li>OpenCodex 读取了其他用户目录或配置目录。</li></ul>
+<p>因此，不应在指南中写成：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Windows 重启会导致 DeepSeek Provider 丢失。</code></pre></div>
+<p>该结论目前没有充分证据支持。</p>
+<h4 id="s-1263">处理方法</h4>
+<p>重新添加 Provider：</p>
+<div class="codebox"><div class="codebar"><span>重新配置前先检查已有状态</span><button type="button" class="copy">复制</button></div><pre><code>ocx provider add deepseek</code></pre></div>
+<p>确认配置：</p>
+<div class="codebox"><div class="codebar"><span>检查供应商</span><button type="button" class="copy">复制</button></div><pre><code>ocx provider list</code></pre></div>
+<p>重启服务：</p>
+<div class="codebox"><div class="codebar"><span>按当前版本管理服务</span><button type="button" class="copy">复制</button></div><pre><code>ocx service --help</code></pre></div>
+<p>重新同步模型目录：</p>
+<p>在当前版本支持的入口同步模型目录，再检查客户端读取的配置。</p>
+<h4 id="s-1272">验证方法</h4>
+<p>依次执行：</p>
+<div class="codebox"><div class="codebar"><span>核对已配置的 Provider</span><button type="button" class="copy">复制</button></div><pre><code>ocx provider list</code></pre></div>
+<p>然后直接测试本地网关：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>$body = @{
+    model  = &quot;deepseek/deepseek-chat&quot;
+    input  = &quot;只回复 OK&quot;
+    stream = $false
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri &quot;http://127.0.0.1:10100/v1/responses&quot; `
+    -Method Post `
+    -ContentType &quot;application/json&quot; `
+    -Body $body</code></pre></div>
+<h4 id="s-1277">预防措施</h4>
+<p>部署和验收完成后，建议备份以下文件：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>%USERPROFILE%\.opencodex\config.json
+%USERPROFILE%\.codex\config.toml
+%USERPROFILE%\.codex\opencodex-catalog.json</code></pre></div>
+<p>安全要求：</p>
+<p>配置文件中可能包含 API Key、Token 或其他认证信息。备份文件应按照敏感资料管理，不得上传到公共代码仓库、公共网盘或未经授权的共享目录。</p>
+
+<h3 id="s-1283">7.6.3  故障 C：模型可见，但提示 ChatGPT 账户不支持</h3>
+<h4 id="s-1284">故障现象</h4>
+<p>模型已经出现在 Codex 模型列表中，但调用时返回：</p>
+<div class="codebox"><div class="codebar"><span>JSON 示例</span><button type="button" class="copy">复制</button></div><pre><code>{
+  &quot;detail&quot;: &quot;The &#x27;deepseek/deepseek-chat&#x27; model is not supported when using Codex with a ChatGPT account.&quot;
+}</code></pre></div>
+<h4 id="s-1287">容易产生的误判</h4>
+<p>该错误表面上容易被理解为：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Codex App 不允许使用 ChatGPT 账户调用 DeepSeek。</code></pre></div>
+<p>但仅凭 Codex App 中的错误信息，无法确定问题发生在哪一层。</p>
+<h4 id="s-1291">判断方法</h4>
+<p>直接请求本地 OpenCodex 网关：</p>
+<div class="codebox"><div class="codebar"><span>PowerShell 示例</span><button type="button" class="copy">复制</button></div><pre><code>$body = @{
+    model  = &quot;deepseek/deepseek-chat&quot;
+    input  = &quot;只回复 OK&quot;
+    stream = $false
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri &quot;http://127.0.0.1:10100/v1/responses&quot; `
+    -Method Post `
+    -ContentType &quot;application/json&quot; `
+    -Body $body</code></pre></div>
+<p>如果本地网关返回相同错误，可以确认：</p>
+<ul><li>请求已经到达 OpenCodex。</li><li>问题不只存在于 Codex App 层。</li><li>OpenCodex 没有按照预期将请求路由到 DeepSeek。</li></ul>
+<h4 id="s-1298">原案例中的原因判断</h4>
+<p>原案例中，重启后恢复，怀疑运行进程没有加载新 Provider 配置。相同报错也可能来自路由或认证设置，需用实际记录定位，不能仅凭报错认定原因。</p>
+<p>以下是与原案例现象相符的一种路由假设，需要用实际请求记录核实：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>deepseek/deepseek-chat
+        │
+        ▼
+OpenCodex 未识别 DeepSeek Provider
+        │
+        ▼
+回落到默认 OpenAI Provider
+        │
+        ▼
+OpenAI 后端拒绝 DeepSeek 模型名称</code></pre></div>
+<h4 id="s-1302">处理方法</h4>
+<p>重启 OpenCodex 服务：</p>
+<div class="codebox"><div class="codebar"><span>按当前版本查询重启方式</span><button type="button" class="copy">复制</button></div><pre><code>ocx service --help</code></pre></div>
+<h4 id="s-1305">验证方法</h4>
+<p>重新执行本地网关测试。</p>
+<p>成功结果应包含：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>status : completed
+model  : deepseek-chat</code></pre></div>
+<p>本地网关成功后，再依次测试 Codex CLI 和 Codex App。</p>
+<h4 id="s-1310">预防措施</h4>
+<p>发生以下变更后，应检查运行实例加载情况，并在所用版本需要时重启服务：</p>
+<ul><li>新增 Provider。</li><li>修改 Provider。</li><li>更新 API Key。</li><li>修改 Provider Base URL。</li><li>修改模型映射。</li><li>修改默认 Provider。</li><li>修改默认模型。</li><li>修改与请求路由相关的配置。</li></ul>
+
+<h3 id="s-1321">7.6.4  故障 D：模型自我描述与实际模型不一致</h3>
+<h4 id="s-1322">故障现象</h4>
+<p>在 Codex App 中已经选择 DeepSeek，但模型回答：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>我是 Codex，OpenAI 的编程助手。</code></pre></div>
+<h4 id="s-1325">原因</h4>
+<p>Codex App 会向底层模型注入角色说明、工作环境和系统提示。模型的自我描述可能受到这些提示影响。</p>
+<p>因此，模型对自身身份的回答不属于可靠的技术证据。</p>
+<h4 id="s-1328">处理方法</h4>
+<p>通过以下方式确认实际调用链路：</p>
+<ol><li>查看 OpenCodex Dashboard。</li><li>查看 Provider 请求日志。</li></ol>
+<div class="codebox"><div class="codebar"><span>查询当前日志入口</span><button type="button" class="copy">复制</button></div><pre><code>ocx debug --help</code></pre></div>
+<h4 id="s-1333">验证标准</h4>
+<p>以请求记录中的以下字段为准：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Provider
+Model
+Base URL
+HTTP 状态
+请求完成状态</code></pre></div>
+<p>例如：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>Provider: deepseek
+Model: deepseek-chat
+Status: completed</code></pre></div>
+<h4 id="s-1338">预防措施</h4>
+<p>部署验收文档中不得使用“询问模型身份”作为模型路由验收方法。</p>
+
+<h2 id="s-1341">7.7 多模型协作方式</h2>
+<p>OpenCodex 的主要价值之一，是让不同模型通过统一入口参与同一个工程流程。</p>
+<p>推荐的模型分工如下：</p>
+<div class="codebox"><div class="codebar"><span>模型分工示例</span><button type="button" class="copy">复制</button></div><pre><code>规划角色：需求、任务拆分、方案与验收标准
+执行角色：实现、测试与执行报告
+复核角色：差异、边界条件与风险审查</code></pre></div>
+<p>需要明确：</p>
+<p>OpenCodex 提供的是多模型目录和请求路由能力，不等同于自动多代理编排系统。</p>
+<p>不同模型之间不应依赖彼此不可见的上下文或“思考过程”，而应通过工程文件进行交接。</p>
+<p>建议在代码仓库中维护以下文件：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>docs/IMPLEMENTATION_PLAN.md
+docs/ACCEPTANCE_CRITERIA.md
+docs/EXECUTION_REPORT.md
+docs/CODE_REVIEW.md</code></pre></div>
+<h3 id="s-1350">7.7.1  规划阶段</h3>
+<p>规划模型负责：</p>
+<ul><li>分析需求。</li><li>拆分任务。</li><li>设计技术方案。</li><li>明确影响范围。</li><li>编写实施步骤。</li><li>定义验收条件。</li></ul>
+<p>推荐输出：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>docs/IMPLEMENTATION_PLAN.md
+docs/ACCEPTANCE_CRITERIA.md</code></pre></div>
+<p>在规划阶段，可要求 GPT 不直接修改代码。</p>
+<h3 id="s-1361">7.7.2  执行阶段</h3>
+<p>执行模型读取实施计划与验收标准，在明确范围内修改代码。</p>
+<p>执行完成后，应记录：</p>
+<ul><li>修改的文件。</li><li>主要实现内容。</li><li>执行的测试。</li><li>测试结果。</li><li>未解决问题。</li><li>已知风险。</li><li>Git commit 标识。</li></ul>
+<p>推荐输出：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>docs/EXECUTION_REPORT.md</code></pre></div>
+<h3 id="s-1373">7.7.3  复核阶段</h3>
+<p>复核模型读取：</p>
+<ul><li>实施计划。</li><li>验收标准。</li><li>代码差异。</li><li>测试结果。</li><li>执行报告。</li></ul>
+<p>重点审查：</p>
+<ul><li>实现是否符合原始计划。</li><li>是否存在边界条件遗漏。</li><li>是否存在异常处理缺失。</li><li>是否存在安全风险。</li><li>是否存在兼容性问题。</li><li>测试覆盖是否充分。</li></ul>
+<p>推荐输出：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>docs/CODE_REVIEW.md</code></pre></div>
+<h3 id="s-1389">7.7.4  模型之间的共享载体</h3>
+<p>多模型协作应共享以下可验证资料：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>代码仓库
+工程文档
+Git diff
+Git commit
+测试命令
+测试结果
+构建日志
+审查报告</code></pre></div>
+<p>不应依赖模型之间不可见、不可复现的内部推理过程。</p>
+
+<h2 id="s-1394">7.8 附录：典型故障处理时间线</h2>
+<p>以下按原作者记录整理，保留当时的排查过程。本次未重现环境，不将其中的原因推断视为已独立验证：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>1. Codex 请求本地 10100 端口时返回 502。
+2. 在当前终端设置临时 NO_PROXY 后，Codex CLI 恢复。
+3. 将本地地址加入用户级 NO_PROXY，完成永久代理绕过配置。
+4. 系统重启后，发现 DeepSeek 不在已配置 Provider 列表中。
+5. 重新添加 DeepSeek Provider。
+6. DeepSeek 模型可以显示，但出现账户不支持的报错。
+7. 直接请求本地 OpenCodex 网关，复现相同错误。
+8. 重启 OpenCodex 后台服务。
+9. 本地网关返回 deepseek-chat 和 completed。
+10. Codex CLI 与 Codex App 恢复正常使用。</code></pre></div>
+<p>对这段历史记录，可以做以下分层判断：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>502 问题
+  └─ 修改代理绕过设置后恢复，需结合当时配置确认
+
+Provider 消失问题
+  └─ 已配置列表中不存在 DeepSeek
+     具体丢失原因尚未完全确认
+
+账户不支持问题
+  └─ 重启后台服务后恢复
+     旧配置或路由回落是候选原因，仍需日志证据</code></pre></div>
+
+<h2 id="s-1400">7.9 标准实施主线</h2>
+<p>整套部署和验收流程应遵循以下顺序：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>选择接入方式
+      │
+      ▼
+安装基础环境和 CLI
+      │
+      ▼
+初始化并启动 OpenCodex
+      │
+      ▼
+添加 Provider
+      │
+      ▼
+重启服务加载最新配置
+      │
+      ▼
+同步模型目录
+      │
+      ▼
+执行分层验收
+      │
+      ▼
+服务健康检查
+      │
+      ▼
+Provider 配置检查
+      │
+      ▼
+本地网关测试
+      │
+      ▼
+Codex CLI 测试
+      │
+      ▼
+Codex App 测试
+      │
+      ▼
+通过 Dashboard 或日志确认实际模型</code></pre></div>
+<p>发生故障时，应先确定问题所在层级：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>安装层
+服务层
+路由层
+Provider 层
+Codex CLI 层
+Codex App 层</code></pre></div>
+<p>然后根据故障现象查找对应故障卡片，不应将完整排查过程写入标准安装步骤。</p>
+<p>通过这种结构，即使实际故障处理过程较为复杂，读者仍然能够获得一条清晰、稳定、可重复执行的部署路径。</p>
+<h2 id="s-1407">7.10 使用部署插件辅助安装</h2>
+<p>可以通过适用于当前环境的部署插件辅助安装和排查。具体步骤取决于所用插件，下列流程用于说明关键检查点。</p>
+<p>安装流程：</p>
+<p>1. 安装来源和功能已经确认的部署插件；查看适用系统、版本及执行范围。</p>
+<figure class="shot"><img src="../assets/screenshots/models-02.svg" width="1200" height="520" loading="lazy" alt="截图待补充：部署插件辅助安装：操作示意"><figcaption>部署插件辅助安装：操作示意 · 截图待补充</figcaption></figure>
+<p>2.直接选择使用插件</p>
+<figure class="shot"><img src="../assets/screenshots/models-03.svg" width="1200" height="520" loading="lazy" alt="截图待补充：部署插件辅助安装：操作示意"><figcaption>部署插件辅助安装：操作示意 · 截图待补充</figcaption></figure>
+<p>3.按照指引确认</p>
+<figure class="shot"><img src="../assets/screenshots/models-04.svg" width="1200" height="520" loading="lazy" alt="截图待补充：部署插件辅助安装：操作示意"><figcaption>部署插件辅助安装：操作示意 · 截图待补充</figcaption></figure>
+<p>4.按照指引确认</p>
+<figure class="shot"><img src="../assets/screenshots/models-05.svg" width="1200" height="520" loading="lazy" alt="截图待补充：部署插件辅助安装：操作示意"><figcaption>部署插件辅助安装：操作示意 · 截图待补充</figcaption></figure>
+<p>5. 部署完成后，按以下模板检查结果</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>请检查当前部署状态，并说明如何添加另一个供应商。
+涉及凭据时提供受控输入入口，不在聊天中索取密钥。
+配置后按服务、供应商、网关和客户端逐层验证。
+输出实际结果与未验证项。</code></pre></div>
+<figure class="shot"><img src="../assets/screenshots/models-06.svg" width="1200" height="520" loading="lazy" alt="截图待补充：部署插件辅助安装：操作示意"><figcaption>部署插件辅助安装：操作示意 · 截图待补充</figcaption></figure>
+<p>6.添加API key</p>
+<p>API Key的添加会分两种情况，1是脚本界面，2是控制台界面</p>
+<p>在可信的本地控制台中添加所需模型及认证信息，确认密钥输入不会进入共享日志或截图。</p>
+<figure class="shot"><img src="../assets/screenshots/models-07.svg" width="1200" height="520" loading="lazy" alt="截图待补充：部署插件辅助安装：操作示意"><figcaption>部署插件辅助安装：操作示意 · 截图待补充</figcaption></figure>
+<p>脚本方式输入凭据时，确认由工具提供受控输入；完成后按插件说明核对配置与同步结果。</p>
+<p>7. 完成配置后，按插件文档重载实际使用的客户端，并执行本章分层验收。</p>
+<figure class="shot"><img src="../assets/screenshots/models-08.svg" width="1200" height="520" loading="lazy" alt="截图待补充：部署插件辅助安装：操作示意"><figcaption>部署插件辅助安装：操作示意 · 截图待补充</figcaption></figure>
+<p>出现 502 或找不到模型时，回到本章的分层排查。只在证据支持时修改代理、同步或重启设置。</p>
+<p>小技巧，读者可以灵活运用GPT辅助安装，按照指引完成操作即可。</p>
+
+<h2 id="s-1431">7.11 OpenCodex 控制台使用说明</h2>
+<p>Windows 下可以使用以下命令打开本地控制台；其他平台按所用版本的帮助确认命令。</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>ocx.cmd gui</code></pre></div>
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><p>主界面</p></td><td><p>供应模型检查与添加</p></td></tr></tbody></table></div>
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><figure class="shot"><img src="../assets/screenshots/models-09.svg" width="1200" height="520" loading="lazy" alt="截图待补充：OpenCodex 控制台：操作示意"><figcaption>OpenCodex 控制台：操作示意 · 截图待补充</figcaption></figure></td><td><figure class="shot"><img src="../assets/screenshots/models-10.svg" width="1200" height="520" loading="lazy" alt="截图待补充：OpenCodex 控制台：操作示意"><figcaption>OpenCodex 控制台：操作示意 · 截图待补充</figcaption></figure></td></tr></tbody></table></div>
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><p>查看使用额度</p></td><td><p>日志查看</p></td></tr></tbody></table></div>
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><figure class="shot"><img src="../assets/screenshots/models-11.svg" width="1200" height="520" loading="lazy" alt="截图待补充：OpenCodex 控制台：操作示意"><figcaption>OpenCodex 控制台：操作示意 · 截图待补充</figcaption></figure></td><td><figure class="shot"><img src="../assets/screenshots/models-12.svg" width="1200" height="520" loading="lazy" alt="截图待补充：OpenCodex 控制台：操作示意"><figcaption>OpenCodex 控制台：操作示意 · 截图待补充</figcaption></figure></td></tr></tbody></table></div>
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><p>号池添加</p></td><td><p>切换策略</p></td></tr></tbody></table></div>
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><figure class="shot"><img src="../assets/screenshots/models-13.svg" width="1200" height="520" loading="lazy" alt="截图待补充：OpenCodex 控制台：操作示意"><figcaption>OpenCodex 控制台：操作示意 · 截图待补充</figcaption></figure></td><td><figure class="shot"><img src="../assets/screenshots/models-14.svg" width="1200" height="520" loading="lazy" alt="截图待补充：OpenCodex 控制台：操作示意"><figcaption>OpenCodex 控制台：操作示意 · 截图待补充</figcaption></figure></td></tr></tbody></table></div>
+<h2 id="s-1446">7.12 多账号路由与切换</h2><div class="callout">账号池属于进阶维护功能。只在账号归属、使用权限和供应商规则允许的范围内使用，不将它当作规避额度或共享凭据的方法。</div><p class="source">参考：<a href="https://github.com/lidge-jun/opencodex" target="_blank" rel="noopener noreferrer">项目的账号池说明</a></p>
+<p>1.添加号池</p>
+<figure class="shot"><img src="../assets/screenshots/models-15.svg" width="1200" height="520" loading="lazy" alt="截图待补充：多账号路由配置：操作示意"><figcaption>多账号路由配置：操作示意 · 截图待补充</figcaption></figure>
+<p>2.登陆
+这里登陆就是正常的GPT登陆模式，登陆所需要的账号后即可</p>
+<figure class="shot"><img src="../assets/screenshots/models-16.svg" width="1200" height="520" loading="lazy" alt="截图待补充：多账号路由配置：操作示意"><figcaption>多账号路由配置：操作示意 · 截图待补充</figcaption></figure>
+<p>3.添加完毕</p>
+<figure class="shot"><img src="../assets/screenshots/models-17.svg" width="1200" height="520" loading="lazy" alt="截图待补充：多账号路由配置：操作示意"><figcaption>多账号路由配置：操作示意 · 截图待补充</figcaption></figure>
+<p>4. 在有权限的账号之间管理路由时，核对实际请求对应的身份、数据边界和工作空间。</p>
+<figure class="shot"><img src="../assets/screenshots/models-18.svg" width="1200" height="520" loading="lazy" alt="截图待补充：多账号路由配置：操作示意"><figcaption>多账号路由配置：操作示意 · 截图待补充</figcaption></figure>
+<p>5. 使用自动切换前，确认策略、故障行为和账号边界；按项目文档配置并用无敏感信息的请求验证。</p>
+<figure class="shot"><img src="../assets/screenshots/models-19.svg" width="1200" height="520" loading="lazy" alt="截图待补充：多账号路由配置：操作示意"><figcaption>多账号路由配置：操作示意 · 截图待补充</figcaption></figure>
+<figure class="shot"><img src="../assets/screenshots/models-20.svg" width="1200" height="520" loading="lazy" alt="截图待补充：多账号路由配置：操作示意"><figcaption>多账号路由配置：操作示意 · 截图待补充</figcaption></figure>
+<p>轮换策略按运行维护需求选择，并保存可核对的配置与验证记录。</p>

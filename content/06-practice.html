@@ -1,0 +1,105 @@
+<p>该章节旨在让读者更好的利用Codex这个工具，其中会提供一些实际的相关案例供大家参考，当然不必拘泥于章节的一些固定做法，一切只是为了使相关概念更好理解，我更期望读者在消化完后能拥有属于自己的一套工作流程。</p>
+<h2 id="s-903">6.1 理解 Skill</h2>
+<p>在前面的 3.7章节中，我们已经对 Skill 的作用和使用效果进行了简单介绍。</p>
+<p>为了帮助读者进一步理解，本节将结合个人实际使用经验，再次对 Skill 的功能、价值和使用方式进行说明。</p>
+<p>温故而知新。
+ 本节不要求读者理解 Skill 的全部技术细节，只需要理解它能够解决什么问题，以及什么时候适合使用 Skill。</p>
+<h2 id="s-907">6.2 Skill 界面与工程初始化案例</h2>
+<figure class="shot"><img src="../assets/screenshots/practice-01.svg" width="1200" height="520" loading="lazy" alt="截图待补充：Skill 界面：操作示意"><figcaption>Skill 界面：操作示意 · 截图待补充</figcaption></figure>
+<p>Skill 将一个重复任务的步骤、资料和输出要求整理成可复用的流程。它可以减少反复说明同一套要求的工作。</p><p class="source">参考：<a href="https://learn.chatgpt.com/docs/skills-and-plugins" target="_blank" rel="noopener noreferrer">官方 Skill 说明</a></p>
+<p>与其每次都重新向 ChatGPT 描述完整需求，不如将经常重复使用的步骤、规则和资料提前封装起来。以后遇到类似任务时，便可以直接调用对应的 Skill。</p>
+<p>因此，Skill 的价值不只是“保存一段提示词”，而是将以下内容组合成一套稳定的执行方法：</p>
+<ul><li>工作步骤；</li><li>约束规则；</li><li>输出格式；</li><li>专业资料；</li><li>工程模板；</li><li>自动化脚本；</li><li>检查和验证流程。</li></ul>
+<p>比如：当不调用SKill时刻</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>输入：帮我创建一个电机工程
+可能存在输出：
+第一次：
+生成 HAL 工程。
+第二次：
+换成 LL。
+第三次：
+目录结构完全不同。
+第四次：
+没有错误处理。
+原因：
+AI不知道约定的工程规范。</code></pre></div>
+<p>输出容易受上下文和提问方式影响，存在较大差异。所以我们需要一套Skill来进行相关约束</p>
+<p>当团队采用相对固定的架构、代码风格和初始化方法时，可以将通用要求整理为专用 Skill。</p>
+<p>例如，为团队建立一个：</p>
+<p>Project Bootstrap Skill</p>
+<p>该 Skill 可以提前规定：</p>
+<ul><li>项目目录结构；</li><li>软件分层方式；</li><li>模块依赖边界；</li><li>Git 初始化规则；</li><li>CMakeLists 创建方式；</li><li>README 编写要求；</li><li>AGENTS.md 规则；</li><li>软件架构文档；</li><li>构建与测试说明；</li><li>项目状态记录；</li><li>初始化后的验证流程。</li></ul>
+<p>以后开始一个新工程时，工程师只需要提供必要资料，例如：</p>
+<ul><li>原始工程源码；</li><li>项目功能需求；</li><li>硬件原理图；</li><li>芯片及外设信息；</li><li>通信接口要求；</li><li>软件架构要求；</li><li>构建和测试方式。</li></ul>
+<p>然后调用对应的 Skill，Codex 就可以根据既定流程，对工程进行初始化和增量更新。</p>
+<p>整个过程可以概括为：</p>
+<div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>输入项目资料
+      ↓
+检查现有工程
+      ↓
+确认关键决策
+      ↓
+提出初始化方案
+      ↓
+获得用户批准
+      ↓
+创建或更新工程文件
+      ↓
+检查实际修改结果
+      ↓
+输出下一步建议</code></pre></div>
+<p>需要注意的是，Skill 并不是让 Codex 在没有确认的情况下随意修改工程。</p>
+<p>一个设计合理的工程 Skill，应当在关键步骤设置确认点，并明确区分：</p>
+<ul><li>可以自动完成的内容；</li><li>需要工程师批准的内容；</li><li>必须由工程师在实机上验证的内容。</li></ul>
+<p>应用展示：</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><p>这是一个创建给工程初始化的Skill</p></td><td><p>调用结果</p></td></tr></tbody></table></div>
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><figure class="shot"><img src="../assets/screenshots/practice-02.svg" width="1200" height="520" loading="lazy" alt="截图待补充：Skill 界面：操作示意"><figcaption>Skill 界面：操作示意 · 截图待补充</figcaption></figure></td><td><figure class="shot"><img src="../assets/screenshots/practice-03.svg" width="1200" height="520" loading="lazy" alt="截图待补充：Skill 界面：操作示意"><figcaption>Skill 界面：操作示意 · 截图待补充</figcaption></figure></td></tr></tbody></table></div>
+<p>这个案例展示工程初始化 Skill 的工作方式。示例仅用于学习，读者可以按自己的工程建立输入与验收约定。</p>
+<p>读者暂时不理解其中的所有目录、脚本或者执行规则也没有关系，这不会影响后续正常使用 Codex。</p>
+<p>在本节中，只需要理解一件事情：</p>
+<p>当一个工程中存在经常重复使用的提示词、操作步骤、工程规范或者检查规则时，就可以将它们提炼出来，封装成一个 Skill。</p>
+<p>例如，经常重复出现的任务包括：</p>
+<ul><li>创建相同的软件目录；</li><li>编写统一格式的 README；</li><li>生成 CMakeLists；</li><li>检查软件分层；</li><li>创建模块接口；</li><li>检查命名规范；</li><li>生成测试说明；</li><li>初始化 Git 仓库；</li><li>输出项目状态报告。</li></ul>
+<p>这些内容都可以逐步沉淀为 Skill。</p>
+<p>工程师不一定需要从零手工编写整个 Skill，可以先将自己的实际需求告诉 Codex，例如：</p>
+<p>请把我们每次创建嵌入式工程时需要重复执行的目录创建、文档生成、架构约束和检查流程，整理并封装成一个可复用的 Skill。</p>
+<p>随后再通过实际项目不断测试、修改和完善。</p>
+<p>最终，这些 Skill 将不再只是某一名工程师的个人使用习惯，而可以逐渐成为：</p>
+<p>可重复使用、可持续改进、可供团队共享的工程能力。</p>
+
+<h2 id="s-978">6.3 理解 Hooks</h2><p>Hooks 是在指定事件发生时执行的脚本，例如任务结束后提醒检查结果。它与按任务选择的 Skill 不同，启用前要确认触发时机、运行环境和命令内容。</p><div class="table-scroll" tabindex="0" role="region" aria-label="可横向滚动的表格"><table><thead><tr><th scope="col">要写清楚的内容</th><th scope="col">示例</th></tr></thead><tbody><tr><td>事件</td><td>任务结束或某类工具执行前后。</td></tr><tr><td>动作</td><td>运行已有检查脚本，输出结果。</td></tr><tr><td>失败处理</td><td>提示失败并保留日志，不把失败当成功。</td></tr><tr><td>权限</td><td>明确脚本会读写什么、是否访问外部服务。</td></tr></tbody></table></div><div class="codebox"><div class="codebar"><span>可复制提示词</span><button type="button" class="copy">复制</button></div><pre><code>请根据当前环境支持的 Hooks，设计一个任务结束后的检查流程。
+先说明触发事件、要执行的脚本、失败时如何提示，以及权限范围。
+先给方案，不直接安装或执行。</code></pre></div><p class="source">参考：<a href="https://learn.chatgpt.com/docs/plugins" target="_blank" rel="noopener noreferrer">Hooks 与插件</a></p>
+<h2 id="s-979">6.4 理解 MCP</h2><p>MCP 为模型连接外部工具与数据提供统一接口。一个服务可以提供读取 Issue、查找文档或修改记录等工具；具体能力取决于服务器实现、认证和授权。</p><div class="table-scroll" tabindex="0" role="region" aria-label="可横向滚动的表格"><table><thead><tr><th scope="col">概念</th><th scope="col">关注点</th></tr></thead><tbody><tr><td>工具</td><td>这次可以执行什么动作？</td></tr><tr><td>连接</td><td>由哪个服务处理请求？</td></tr><tr><td>认证</td><td>使用哪个账号或凭据？</td></tr><tr><td>权限</td><td>只读、写入和公开发布分别允许什么？</td></tr></tbody></table></div><p>先用一个明确的只读任务验证连接，例如读取示例仓库的 README。写入或发布前，再核对具体目标和影响。</p>
+<h2 id="s-980">6.5 理解 Plugin</h2>
+<p>插件入口界面介绍</p>
+<p>在插件目录查看已安装和可用的插件。下面以 GitHub 连接为例，演示安装、账号授权和实际读取。</p>
+<figure class="shot"><img src="../assets/screenshots/practice-04.svg" width="1200" height="520" loading="lazy" alt="截图待补充：理解Plugin：操作示意"><figcaption>理解Plugin：操作示意 · 截图待补充</figcaption></figure>
+<p>在 Codex 中，Plugin 可以理解为：</p>
+<p>围绕某一类任务或工作流，将操作说明、外部工具连接和可重复执行能力打包在一起的功能模块。</p>
+<p>当你安装插件或自己创造插件后，Codex 不仅知道“应该怎样思考和处理任务”，还可能获得访问外部数据、调用外部工具以及执行特定操作的能力。</p>
+<p>例如，一个 GitHub 相关插件可能帮助 Codex：</p>
+<ul><li>查询代码仓库；</li><li>阅读源代码；</li><li>分析提交记录；</li><li>查看 Issue 和 Pull Request；</li><li>总结项目近期变化；</li><li>在获得权限和确认后执行部分仓库操作。</li></ul>
+<p>因此，Plugin 的作用并不是简单地给 Codex 增加一个按钮，而是让 Codex能够适应某一类真实工作流程，这也是其最核心的一个功能</p>
+<p>那一个Plugin由什么组成呢？我想可以按照这么一个简单的框架来说明：</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="可横向滚动的表格"><table><thead><tr><th scope="col">组成</th><th scope="col">作用</th></tr></thead><tbody><tr><td>Skill（可选）</td><td>说明任务步骤、参考资料与输出格式。</td></tr><tr><td>MCP 或服务连接（可选）</td><td>提供经过认证的外部工具与数据访问。</td></tr><tr><td>脚本、Hooks 与资源（可选）</td><td>提供执行动作、事件响应或模板。</td></tr></tbody></table></div><p>这是常见组合示意，不要求每个插件都同时包含这些部分。</p>
+
+<figure class="shot"><img src="../assets/screenshots/practice-05.svg" width="1200" height="520" loading="lazy" alt="截图待补充：理解Plugin：操作示意"><figcaption>理解Plugin：操作示意 · 截图待补充</figcaption></figure>
+<p>那么实际的一个执行流程可以这么理解：</p>
+<div class="codebox"><div class="codebar"><span>插件工作流程</span><button type="button" class="copy">复制</button></div><pre><code>理解目标 → 判断所需能力 → 检查工具与权限
+→ 在授权范围内执行 → 核对返回结果 → 给出可审阅输出</code></pre></div>
+<h3 id="s-1001">实际示例展示</h3>
+<h4 id="s-1002">安装插件</h4>
+<p>那么我们这里以公开的插件Github为案例进行演示：</p>
+<figure class="shot"><img src="../assets/screenshots/practice-06.svg" width="1200" height="520" loading="lazy" alt="截图待补充：安装插件：操作示意"><figcaption>安装插件：操作示意 · 截图待补充</figcaption></figure>
+<p>在插件目录安装 GitHub 插件，再按提示登录外部服务并选择授权仓库。优先用专门的示例仓库验证。</p>
+<p>检查插件连接状态。GitHub CLI 的登录与插件的服务授权是不同入口，不能相互替代。</p>
+<p class="source">参考：<a href="https://learn.chatgpt.com/docs/plugins" target="_blank" rel="noopener noreferrer">插件安装与连接</a></p>
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="操作对照表"><table><tbody><tr><td><p>点击</p><figure class="shot"><img src="../assets/screenshots/practice-07.svg" width="1200" height="520" loading="lazy" alt="截图待补充：安装插件：点击"><figcaption>安装插件：点击 · 截图待补充</figcaption></figure></td><td><p>先回到Application，然后就能看到已经被授权</p><figure class="shot"><img src="../assets/screenshots/practice-08.svg" width="1200" height="520" loading="lazy" alt="截图待补充：安装插件：先回到Application，然后就能看到已经被授权"><figcaption>安装插件：先回到Application，然后就能看到已经被授权 · 截图待补充</figcaption></figure></td></tr></tbody></table></div>
+<h4 id="s-1010">实际测试</h4>
+<figure class="shot"><img src="../assets/screenshots/practice-09.svg" width="1200" height="520" loading="lazy" alt="截图待补充：实际测试：操作示意"><figcaption>实际测试：操作示意 · 截图待补充</figcaption></figure>
+<p>先在示例仓库中读取 README 或某条 Issue，核对实际结果。形成参考资料库时，确认每个仓库的授权和公开范围。</p>
+
+
