@@ -305,3 +305,6 @@ body:has(> main.style-preview[data-brand='miaomiao']) > .footer { display: none;
 }
 
 .style-preview :is(.mm-room-card,.mm-tool-card,.mm-route):focus-visible { outline: 3px solid var(--mm-focus); outline-offset: 4px; }
+
+/* The comparison sample opts out of the site's new heading font. */
+.style-preview[data-theme='original'] :is(h1,h2,h3,h4,.mm-card-name,.mm-tool-content strong,.mm-route strong,.mm-brand strong,.mm-inventory,.mm-bottom-nav,.mm-language){font-family:var(--mm-font-body,-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif);font-weight:600}

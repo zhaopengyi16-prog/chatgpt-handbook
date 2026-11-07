@@ -1,7 +1,8 @@
 'use client';
 import {useRef,useState} from 'react';
 import {Button} from '@/components/ui/button';
-import {EMPTY_TAGS,getChapterTags,GROUPS,TAXONOMY_ICONS,type Category,type ChapterTags,type Group,type TaxonomyDocument,type TaxonomyView} from '@/lib/taxonomy-types';
+import {EMPTY_TAGS,getChapterTags,GROUPS,TAXONOMY_ICONS,TAXONOMY_MATERIALS,type Category,type ChapterTags,type Group,type Material,type TaxonomyDocument,type TaxonomyView} from '@/lib/taxonomy-types';
+import {categoryMaterial,MATERIAL_LABELS} from '@/lib/category-material';
 import {api} from '../shared';
 import './taxonomy.css';
 
@@ -26,7 +27,7 @@ export function ChapterTagFields({doc,tags,disabled,onChange}:{doc:TaxonomyDocum
 
 type AdminChapter={id:string;title:string;deleted_at?:string|null;[key:string]:any};
 type Work=(fn:()=>Promise<void>,message?:string)=>Promise<void>;
-type Form={kind:'create'|'edit';group:Group;revision:number;id:string;name:string;icon:string;description:string};
+type Form={kind:'create'|'edit';group:Group;revision:number;id:string;name:string;icon:string;description:string;material:Material|''};
 type Props={view:TaxonomyView|null;chapters:AdminChapter[];busy:boolean;work:Work;refresh:()=>Promise<void>;onUpdate:(v:TaxonomyView)=>Promise<void>;confirm:(c:{title:string;message:string;action:()=>void})=>void};
 
 export default function TaxonomyPanel({view,chapters,busy,work,refresh,onUpdate,confirm}:Props){
@@ -40,7 +41,7 @@ export default function TaxonomyPanel({view,chapters,busy,work,refresh,onUpdate,
   }
   function startForm(group:Group,x?:Category){
     if(!doc)return;
-    setForm({group,kind:x?'edit':'create',revision:doc.revision,id:x?.id??'',name:x?.name??'',icon:x?.icon??'book',description:x?.description??''});
+    setForm({group,kind:x?'edit':'create',revision:doc.revision,id:x?.id??'',name:x?.name??'',icon:x?.icon??'book',description:x?.description??'',material:x?.material??''});
     requestAnimationFrame(()=>nameInput.current?.focus());
   }
   const toolbar=<Button variant="outline" disabled={busy} onClick={()=>work(refresh,'')}>重新读取分类</Button>;
@@ -62,29 +63,30 @@ export default function TaxonomyPanel({view,chapters,busy,work,refresh,onUpdate,
   const currentItem=form&&doc[form.group].find(x=>x.id===form.id);
   function saveForm(){
     if(!form||newer)return;
-    const {kind,group,id,name,description,icon,revision:expectedRevision}=form;
+    const {kind,group,id,name,description,icon,material,revision:expectedRevision}=form;
     void work(async()=>{
-      if(kind==='create')await mutate('POST',{action:'create',group,item:{id,name,description,icon},expectedRevision});
-      else await mutate('PUT',{action:'edit',group,id,changes:{name,description,icon},expectedRevision});
+      if(kind==='create')await mutate('POST',{action:'create',group,item:{id,name,description,icon,...(material?{material}:{})},expectedRevision});
+      else await mutate('PUT',{action:'edit',group,id,changes:{name,description,icon,material:material||null},expectedRevision});
       setForm(null);
     },'分类已保存。');
   }
-  return <section className="tax-panel"><div className="section-heading"><div><h2>分类管理</h2><p className="muted">名称和顺序保存后立即应用到网站；章节归类随正文发布。</p></div>{toolbar}</div>
+  return <section className="tax-panel"><div className="section-heading"><div><h2>分类管理</h2><p className="muted">名称、顺序和材质保存后立即应用到网站；章节归类随正文发布。</p></div>{toolbar}</div>
     <label className="field tax-policy"><span>没有公开教程的分类</span><select disabled={busy||!!form} value={doc.emptyPolicy} onChange={e=>{const emptyPolicy=e.target.value;void work(()=>mutate('PUT',{action:'setEmptyPolicy',emptyPolicy,expectedRevision:doc.revision}),'展示方式已保存。');}}><option value="hide">隐藏</option><option value="comingSoon">显示为「即将上线」</option></select></label>
     <div className="section-heading"><div className="row-actions" role="group" aria-label="分类维度">{GROUPS.map(g=><Button key={g} disabled={busy||!!form} variant={group===g?'default':'outline'} aria-pressed={group===g} onClick={()=>setGroup(g)}>{labels[g]} · {doc[g].length}</Button>)}</div><Button disabled={busy||!!form} onClick={()=>startForm(group)}>新增{labels[group]}</Button></div>
     {form&&<form className="box tax-form" onSubmit={e=>{e.preventDefault();saveForm();}}><h3>{form.kind==='create'?'新增':'编辑'}{labels[form.group]}</h3>
       <label className="field"><span>显示名称</span><input ref={nameInput} required maxLength={40} disabled={busy} value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label>
       <label className="field"><span>固定标识（用于网址）</span><input required disabled={busy||form.kind==='edit'} pattern="[a-z][a-z0-9\-]{0,47}" title="以小写英文字母开头，可含小写字母、数字和连字符" maxLength={48} value={form.id} onChange={e=>setForm({...form,id:e.target.value})}/></label>
       <label className="field"><span>图标</span><select disabled={busy} value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})}>{Object.entries(TAXONOMY_ICONS).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
+      <label className="field"><span>卡片材质</span><select disabled={busy} value={form.material} onChange={e=>setForm({...form,material:e.target.value as Material|''})}><option value="">自动（按分类顺序轮换）</option>{TAXONOMY_MATERIALS.map(material=><option key={material} value={material}>{MATERIAL_LABELS[material]}</option>)}</select><small className="muted">自动材质随排序变化；指定材质会保留。材质只用于卡片装饰，不影响正文。</small></label>
       <label className="field"><span>简介</span><textarea maxLength={200} disabled={busy} value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label>
       {newer&&<div role="status" className="box"><p>分类在编辑期间已有更新。本页输入已保留。</p>
-        {currentItem&&<p>服务器当前值：{currentItem.name} · {TAXONOMY_ICONS[currentItem.icon]} · {currentItem.description||'暂无简介'}</p>}
+        {currentItem&&<p>服务器当前值：{currentItem.name} · {TAXONOMY_ICONS[currentItem.icon]} · {currentItem.material?MATERIAL_LABELS[currentItem.material]:'自动材质'} · {currentItem.description||'暂无简介'}</p>}
         {!currentItem&&form.kind==='edit'&&<p>这项分类已被删除，无法继续保存。</p>}
         {((form.kind==='edit'&&currentItem)||(form.kind==='create'&&!currentItem))&&<Button type="button" variant="outline" onClick={()=>setForm({...form,revision:doc.revision})}>已核对，保留输入并使用新版分类</Button>}
       </div>}
       <div className="row-actions"><Button type="submit" disabled={busy||!!newer}>保存分类</Button><Button type="button" variant="outline" disabled={busy} onClick={()=>setForm(null)}>取消编辑</Button></div>
     </form>}
-    <div className="tax-items">{items.map((x,i)=>{const ids=refs(x);return <article className="chapter-row" key={x.id}><div className="grow"><h3>{x.name}</h3><small className="muted">{x.id}</small>{x.description&&<p>{x.description}</p>}
+    <div className="tax-items">{items.map((x,i)=>{const ids=refs(x),material=categoryMaterial(x);return <article className="chapter-row" key={x.id}><div className="grow"><h3>{x.name}</h3><small className="muted">{x.id}</small><span className="tax-material-label"><span className="tax-material-swatch" data-material={material} style={{backgroundImage:`url('/assets/style-preview/materials/${material}.svg')`}} aria-hidden="true"/>{x.material?MATERIAL_LABELS[x.material]:'自动 · '+MATERIAL_LABELS[material]}</span>{x.description&&<p>{x.description}</p>}
       {ids.length?<details><summary>{ids.length} 个章节引用 · 查看</summary><ul>{ids.map(id=>{const chapter=chapters.find(c=>c.id===id);const states=[includesCategory(getChapterTags(doc.chapterTags,id),x.id)&&'草稿',includesCategory(getChapterTags(doc.publishedChapterTags,id),x.id)&&'发布快照',chapter?.deleted_at&&'回收站'].filter(Boolean);
       return <li key={id}>{chapter?.title||id} <span className="muted">（{states.join('、')}）</span></li>;})}</ul><small className="muted">如需删除，请先移除以上引用。</small></details>:<small className="muted">尚无章节引用</small>}
       </div><div className="row-actions"><Button variant="outline" disabled={busy||!!form} onClick={()=>startForm(group,x)}>编辑<span className="sr-only">{x.name}</span></Button>

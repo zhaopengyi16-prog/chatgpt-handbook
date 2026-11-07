@@ -1,1 +1,1 @@
-export default function Page(){return <main className="wide" id="main"><h1>页面不存在或尚未发布</h1><a className="button" href="/">返回学习目录</a></main>;}
+export default function Page(){return <main className="wide mm-state-page" id="main"><p className="home-label">AI 妙妙屋 · 404</p><h1>页面不存在或尚未发布</h1><p>可以从教程目录继续寻找你想了解的内容。</p><a className="button" href="/#all-chapters">返回学习目录</a></main>;}

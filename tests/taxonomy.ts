@@ -11,6 +11,7 @@ import {FIFTH_CHAPTER_REVISION} from '../lib/chapter-five-release';
 import {decodeTaxonomy,initializeTaxonomy,serializeTaxonomy} from '../lib/taxonomy';
 import {saveChapterWithTags} from '../lib/chapter-taxonomy-write';
 import {readPublicCatalog,filterCatalog} from '../lib/public-taxonomy';
+import {categoryMaterial} from '../lib/category-material';
 import {setHeaders,sqlite} from './runtime-mock';
 
 const root='https://handbook.test', admin='admin/taxonomy', key='taxonomy_v1';
@@ -151,7 +152,7 @@ for(const [i,id] of starterIds.entries()){
 }
 assert.match(String(row(starterIds[0]).title),/Blender/);
 
-// A compatibility reader accepts future material data without enabling its API editor.
+// The v18-compatible document remains schema 1; presentation defaults never write settings.
 // Keep this expected list independent of the implementation's whitelist.
 const materialGroups=['tasks','tools','levels'] as const;
 const expectedMaterials=['grass','dirt','stone','water','sand','wood','ember','gem','snow'] as const;
@@ -168,7 +169,18 @@ assert.deepEqual(JSON.parse(serializeTaxonomy(oldDecoded.doc)),seeded);
 const oldView=await expect(api(admin));assert.equal(oldView.state,'ready');
 for(const group of materialGroups) for(const c of oldView.taxonomy[group])
   assert(!Object.hasOwn(c,'material'),'reading old categories must not backfill a material');
-assert.equal((await readPublicCatalog(root)).ready,true);
+for(let order=0;order<27;order++) {
+  const automatic=Object.freeze({order});
+  assert.equal(categoryMaterial(automatic),expectedMaterials[order%9]);
+  assert(!Object.hasOwn(automatic,'material'));
+  assert.equal(categoryMaterial({...automatic,material:'snow'}),'snow');
+}
+// Hiding the first category must not move the second category to the first material.
+assert.equal(categoryMaterial({order:1}),'dirt');
+const automaticCatalog=await readPublicCatalog(root);
+assert.equal(automaticCatalog.ready,true);
+assert.deepEqual(automaticCatalog.tasks.map(c=>[c.id,c.material]),[['coding','dirt'],['engineering','stone']],
+  'automatic materials use stored order before empty categories are hidden');
 assert.deepEqual(readSnapshot(),oldReadBefore);
 
 for(const material of expectedMaterials) {
@@ -196,7 +208,7 @@ try {
   assert.deepEqual(readSnapshot(),invalidReadBefore,'invalid material reads/init must not repair or reset data');
 } finally {sqlite.prepare('UPDATE settings SET value=? WHERE key=?').run(seedBytes!,key);}
 
-// Simulate data written by a later compatible release, not an API backdoor in this phase.
+// Existing annotated data from a compatible version must survive old editor paths.
 // All nine values span the three groups; other categories deliberately stay unannotated.
 const future=structuredClone(seeded);
 const materialFixtures=expectedMaterials.map((material,index)=>({
@@ -228,19 +240,51 @@ assert.equal(raw(),formattedFuture,'readers must preserve the exact formatted se
 assert.equal(doc().writeToken,future.writeToken);assert.equal(doc().revision,future.revision);
 assert.deepEqual(readSnapshot(),futureReadBefore,'reads preserve every chapter/media/settings field');
 
+// A material edit is a navigation setting, never a chapter/content write.
+const beforeMaterialChapters=rows(),beforeMaterialMedia=readSnapshot().media,initialEmptyPolicy=doc().emptyPolicy;
+for(const [index,material] of expectedMaterials.entries()) {
+  const group=materialGroups[index%3],id='material-'+material;
+  const previous=doc();
+  await expect(create({...category,id,name:'材质 '+material,material},group));
+  let current=doc();
+  assert.equal(current.schema,1);assert.equal(current.revision,previous.revision+1);
+  assert.notEqual(current.writeToken,previous.writeToken);
+  assert.equal(current[group].find((c:any)=>c.id===id).material,material);
+  assert.equal(current.emptyPolicy,initialEmptyPolicy);
+  await expect(update('edit',{group,id,changes:{description:'普通说明编辑不清除指定材质'}}));
+  assert.equal(doc()[group].find((c:any)=>c.id===id).material,material);
+  const nextMaterial=expectedMaterials[(index+1)%9];
+  await expect(update('edit',{group,id,changes:{material:nextMaterial}}));
+  assert.equal(doc()[group].find((c:any)=>c.id===id).material,nextMaterial);
+  const exported=await expect(api('admin/export'));
+  assert.equal(exported.taxonomy_v1[group].find((c:any)=>c.id===id).material,nextMaterial);
+  await expect(update('edit',{group,id,changes:{material:null}}));
+  current=doc();const automatic=current[group].find((c:any)=>c.id===id);
+  assert(!Object.hasOwn(automatic,'material'),'automatic choice omits the stored field; it is never null');
+  assert.equal(categoryMaterial(automatic),expectedMaterials[automatic.order%9]);
+  await expect(update('edit',{group,id,changes:{description:'自动材质也保持省略'}}));
+  assert(!Object.hasOwn(doc()[group].find((c:any)=>c.id===id),'material'));
+  await expect(del(id,group));
+}
+assert.deepEqual(rows(),beforeMaterialChapters);assert.deepEqual(readSnapshot().media,beforeMaterialMedia);
+assert.equal(doc().emptyPolicy,initialEmptyPolicy);assertFutureMaterials();
 const beforeMaterialWrites=readSnapshot();
-for(const material of [...expectedMaterials,null]) {
+const invalidMaterials=['lava','Grass',' grass','grass ','#fff','url(https://evil.test/image)','<script>',42,true,[],{}];
+for(const material of [null,...invalidMaterials]) {
   await expect(create({...category,id:'blocked-material',material}),400);
   assert.deepEqual(readSnapshot(),beforeMaterialWrites);
+}
+for(const material of invalidMaterials) {
   await expect(update('edit',{group:'tasks',id:'coding',changes:{material}}),400);
   assert.deepEqual(readSnapshot(),beforeMaterialWrites);
 }
-// Guards must still run before the now-readable material data reaches API validation.
+// Permission/origin guards still run before material input reaches validation.
 for(const [who,status] of [[{},401],[member,403]] as const) {
   await expect(api(admin,'GET',null,who),status);
   await expect(api(admin,'POST',edits('create',{group:'tasks',item:{...category,material:'grass'}}),who),status);
   await expect(api(admin,'PUT',edits('edit',{group:'tasks',id:'coding',changes:{material:'grass'}}),who),status);
 }
+await expect(api(admin,'PUT',edits('edit',{group:'tasks',id:'coding',changes:{material:'grass'}}),owner,'https://another.test'),403);
 assert.deepEqual(readSnapshot(),beforeMaterialWrites);
 const codingDescription=doc().tasks.find((c:any)=>c.id==='coding').description;
 const beforeCategoryWrite=doc();
@@ -251,6 +295,51 @@ assert.notEqual(doc().writeToken,beforeCategoryWrite.writeToken,'a successful ca
 assertFutureMaterials();
 await expect(update('edit',{group:'tasks',id:'coding',changes:{description:codingDescription}}));
 assertFutureMaterials();
+
+// Two material editors share the same revision: one succeeds, one receives 409.
+{
+  const previous=doc(),chaptersBefore=rows();
+  const competing=await Promise.all(['snow','wood'].map(material=>api(admin,'PUT',{
+    action:'edit',group:'tasks',id:'coding',changes:{material},expectedRevision:previous.revision,
+  })));
+  assert.deepEqual(competing.map(result=>result.status).sort(),[200,409]);
+  assert.equal(doc().tasks.find((c:any)=>c.id==='coding').material,competing[0].status===200?'snow':'wood');
+  assert.equal(revision(),previous.revision+1);assert.notEqual(doc().writeToken,previous.writeToken);
+  assert.deepEqual(rows(),chaptersBefore);
+  assert.deepEqual(doc().chapterTags,previous.chapterTags);
+  assert.deepEqual(doc().publishedChapterTags,previous.publishedChapterTags);
+  await expect(update('edit',{group:'tasks',id:'coding',changes:{material:'dirt'}}));
+  assertFutureMaterials();
+}
+
+// Race a navigation material edit with an actual chapter publish. The shared
+// revision allows exactly one complete operation, never a half-published body.
+{
+  const chapter=await adminChapter('desktop'),previous=doc(),chapterBefore=row('desktop');
+  const results=await Promise.all([
+    api(admin,'PUT',{action:'edit',group:'tasks',id:'coding',changes:{material:'snow'},expectedRevision:previous.revision}),
+    change('desktop',{...chapter,action:'publish',title:'material race publication',body:'<p>material race body</p>'}),
+  ]);
+  assert.deepEqual(results.map(result=>result.status).sort(),[200,409]);
+  assert.equal(revision(),previous.revision+1);
+  const current=row('desktop');
+  if(results[0].status===200){
+    assert.deepEqual(current,chapterBefore,'losing publish must not change a single chapter field');
+    assert.equal(doc().tasks.find((c:any)=>c.id==='coding').material,'snow');
+    assert.deepEqual(doc().chapterTags,previous.chapterTags);
+    assert.deepEqual(doc().publishedChapterTags,previous.publishedChapterTags);
+    await expect(update('edit',{group:'tasks',id:'coding',changes:{material:'dirt'}}));
+  }else{
+    assert.equal(current.title,'material race publication');assert.equal(current.published_title,current.title);
+    assert.equal(current.body,'<p>material race body</p>');assert.equal(current.published_body,current.body);
+    assert.equal(current.version,Number(chapterBefore.version)+1);
+    assert.equal(doc().tasks.find((c:any)=>c.id==='coding').material,'dirt');
+    assert.deepEqual(doc().publishedChapterTags.desktop,chapter.tags);
+    const latest=await adminChapter('desktop');
+    await expect(change('desktop',{...latest,action:'publish',title:chapter.title,description:chapter.description,body:chapter.body,position:chapter.position}));
+  }
+  assertFutureMaterials();
+}
 
 // Exercise real server page components as both identities, including direct guesses, public projection and query filters.
 const draftTitles=starterIds.map(id=>String(row(id).title));
@@ -349,6 +438,7 @@ await expect(update('reorder',{group:'tasks',ids:taskIds.map(()=>taskIds[0])}),4
 await expect(update('setEmptyPolicy',{emptyPolicy:'expose'}),400);
 await expect(del('coding'),409);assert.equal(raw(),beforeErrors);
 await expect(create(category));const versionAfterCreate=revision();
+assert(!Object.hasOwn(doc().tasks.find((c:any)=>c.id===category.id),'material'),'creating an automatic category does not store a material');
 await expect(create({...category,name:'changed'}),409);
 await expect(create({...category,id:'another',name:' '+category.name+' '}),409);
 assert.equal(revision(),versionAfterCreate);
@@ -360,6 +450,10 @@ await expect(update('reorder',{group:'tasks',ids:reversed}));
 assert.deepEqual(doc().tasks.map((x:any)=>x.id),reversed);
 assert.deepEqual(doc().tasks.map((x:any)=>x.order),reversed.map((_:string,i:number)=>i));
 assertFutureMaterials();
+for(const group of materialGroups) for(const c of (await readPublicCatalog(root))[group]) {
+  const stored=doc()[group].find((item:any)=>item.id===c.id);
+  assert.equal(c.material,stored.material??expectedMaterials[stored.order%9]);
+}
 await expect(del(category.id));await expect(create(category),409);
 
 // A draft-only classification and changed text must remain private until an explicit publish.
