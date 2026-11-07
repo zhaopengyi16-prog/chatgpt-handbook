@@ -1,7 +1,8 @@
 'use client';
 
 import {useRef, useState, type FormEvent} from 'react';
-import HouseArt from './house';
+import PixelHouse from './pixel-house';
+import SkyClouds from './sky';
 
 type IconName = 'home'|'rooms'|'tools'|'forum'|'updates'|'person'|'code'|'ruler'|'cube'|'web'|'file'|'video'|'image'|'plus'|'arrow'|'check';
 type Material = 'grass'|'dirt'|'stone'|'water'|'sand'|'wood'|'ember'|'gem'|'snow';
@@ -99,6 +100,7 @@ export default function StyleDemo({theme}:{theme:'original'|'pixel'}) {
 
   return <main id="main" className="style-preview" data-theme={theme} data-brand="miaomiao">
     <div className="mm-sky" id="mm-home">
+      <SkyClouds/>
       <header className="mm-topbar">
         <a className="mm-brand" href="#mm-home" aria-label="AI 妙妙屋 首页"><span className="mm-logo mm-material" data-material="grass" aria-hidden="true"/><span><strong>AI 妙妙屋</strong><small>MIAOMIAO HOUSE</small></span></a>
         <nav className="mm-inventory" aria-label="示例主导航">{navigation.map(item=><a key={item.name} href={item.href} aria-current={activeNav===item.name?'location':undefined} onClick={()=>setActiveNav(item.name)}><Icon name={item.icon}/><span>{item.name}</span></a>)}</nav>
@@ -106,7 +108,7 @@ export default function StyleDemo({theme}:{theme:'original'|'pixel'}) {
       </header>
       <section className="mm-hero mm-wrap" aria-labelledby="mm-hero-title">
         <div className="mm-hero-copy"><p className="mm-eyebrow">WELCOME HOME · LEARN SOMETHING NEW</p><h1 id="mm-hero-title">欢迎来到<br/><span>AI 妙妙屋</span></h1><p className="mm-intro">每个房间学一件事：建模、写代码、做网站、做视频……<span className="mm-hero-extra">教程一步步跟着做，</span>卡住了就到论坛里问。</p><div className="mm-hero-actions"><a className="mm-button mm-primary" href="#mm-learning"><span aria-hidden="true">▶</span> 从入门开始</a><a className="mm-button" href="#mm-forum">参与讨论</a></div><div className="mm-hero-badges"><span>7 个场景</span><span>6 组工具</span><span>固定样例 · 非实时统计</span></div></div>
-        <div className="mm-house" aria-hidden="true"><HouseArt/><span>MIAOMIAO HOUSE</span></div>
+        <PixelHouse/>
       </section>
     </div>
     <div className="mm-ground" aria-hidden="true"><div className="mm-material" data-material="grass"/><div className="mm-material" data-material="dirt"/></div>

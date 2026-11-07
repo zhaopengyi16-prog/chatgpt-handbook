@@ -5,6 +5,7 @@ import {Unavailable} from '../../shared';
 import StyleDemo from './demo';
 import '@/public/assets/style-preview/miaomiao-font/fonts.css';
 import './preview.css';
+import './sky.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata:Metadata = {

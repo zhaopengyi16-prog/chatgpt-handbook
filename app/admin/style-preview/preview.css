@@ -1,3 +1,5 @@
+@import './materials.css';
+
 /* Route-only shell: the existing site chrome stays unchanged on every public page. */
 body:has(> main.style-preview[data-brand='miaomiao']) > .header,
 body:has(> main.style-preview[data-brand='miaomiao']) > .footer { display: none; }
@@ -81,10 +83,6 @@ body:has(> main.style-preview[data-brand='miaomiao']) > .footer { display: none;
 .style-preview [data-material='ember'] { --mm-material: var(--mm-ember); }
 .style-preview [data-material='gem'] { --mm-material: var(--mm-gem); }
 .style-preview [data-material='snow'] { --mm-material: var(--mm-snow); }
-.style-preview .mm-material { background-color: var(--mm-material,var(--mm-stone)); background-image: repeating-linear-gradient(90deg,#ffffff0d 0 6px,transparent 6px 12px),repeating-linear-gradient(0deg,#0000000c 0 6px,transparent 6px 12px); }
-.style-preview .mm-material[data-material='wood'] { background-image: repeating-linear-gradient(90deg,transparent 0 24px,#0002 24px 27px,#fff2 27px 30px,transparent 30px 48px); }
-.style-preview .mm-material[data-material='water'] { background-image: repeating-linear-gradient(90deg,#fff1 0 9px,transparent 9px 18px,#0001 18px 27px); }
-.style-preview .mm-material[data-material='gem'] { background-image: linear-gradient(45deg,#fff1 25%,transparent 25%),linear-gradient(225deg,#0001 25%,transparent 25%); background-size: 18px 18px; }
 .style-preview .mm-ground { border-bottom: var(--mm-line) solid var(--mm-ink); }
 .style-preview .mm-ground > div:first-child { height: 20px; border-bottom: 4px solid #2f5523; }
 .style-preview .mm-ground > div:last-child { height: 32px; }
@@ -117,9 +115,7 @@ body:has(> main.style-preview[data-brand='miaomiao']) > .footer { display: none;
 .style-preview .mm-learning-path::before { content: ''; position: absolute; left: 45px; right: 45px; top: 50%; border-top: 8px dashed var(--mm-ink); }
 .style-preview .mm-learning-path li { position: relative; min-width: 0; margin: 0; padding: 0; }
 .style-preview .mm-route { display: flex; flex-direction: column; height: 100%; padding: 20px; border: var(--mm-line) solid var(--mm-ink); box-shadow: var(--mm-inset),4px 4px 0 var(--mm-ink); border-radius: var(--mm-radius); color: var(--mm-action-ink); }
-.style-preview .mm-route[data-material='gem'] { --mm-material: #7046a7; color: #fffdf6; }
 .style-preview .mm-route:hover { color: var(--mm-action-ink); outline: 3px solid var(--mm-yellow); outline-offset: -6px; }
-.style-preview .mm-route[data-material='gem']:hover { color: #fffdf6; }
 .style-preview .mm-route > span { font-family: ui-monospace,monospace; font-size: 14px; font-weight: 700; }
 .style-preview .mm-route strong { font-size: 24px; line-height: 1.5; margin: 5px 0; }
 .style-preview .mm-route p { font-size: 16px; line-height: 1.8; }

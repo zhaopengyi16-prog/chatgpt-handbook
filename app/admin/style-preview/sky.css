@@ -1,0 +1,31 @@
+/* Decorative sky only; static integer-pixel silhouettes, no frame loop. */
+.style-preview .mm-sky { position: relative; isolation: isolate; }
+.style-preview .mm-sky-clouds { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.style-preview .mm-cloud { position: absolute; display: block; image-rendering: pixelated; }
+.style-preview .mm-cloud-one { top: 158px; right: 340px; }
+.style-preview .mm-cloud-two { top: 204px; right: 32px; }
+.style-preview .mm-cloud-three { top: 120px; right: 172px; }
+.style-preview :is(.mm-topbar,.mm-hero) { position: relative; z-index: 1; }
+.style-preview .mm-house-art { width: 560px; height: 420px; max-width: none; margin-inline: auto; image-rendering: pixelated; }
+.style-preview[data-theme='original'] .mm-sky-clouds { display: none; }
+/* The visible SVG keeps a 1:1 viewport so its 16px tiles stay exactly 2x.
+   Intermediate widths stack the house rather than fractionally resampling it. */
+@media (min-width: 1101px) {
+  .style-preview .mm-hero { grid-template-columns: minmax(0,1.1fr) minmax(560px,1fr); }
+}
+@media (min-width: 601px) and (max-width: 1100px) {
+  .style-preview .mm-hero { grid-template-columns: minmax(0,1fr); }
+  .style-preview .mm-house { width: 560px; justify-self: center; }
+}
+@media (max-width: 1100px) {
+  .style-preview .mm-cloud-one { right: 220px; }
+  .style-preview .mm-cloud-three { right: 96px; }
+}
+@media (max-width: 600px) {
+  .style-preview .mm-cloud-one { top: 86px; right: -8px; }
+  .style-preview .mm-cloud-two { top: 154px; right: 12px; }
+  .style-preview .mm-cloud-three { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .style-preview .mm-cloud { animation: none; transition: none; }
+}
