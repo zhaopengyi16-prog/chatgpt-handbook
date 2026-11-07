@@ -27,3 +27,5 @@ export function setHeaders(h:Headers){current=h;}
 export async function headers(){return current;}
 export function redirect(path:string){throw new Error('REDIRECT:'+path);}
 export function notFound():never{throw new Error('NOT_FOUND');}
+// SSR-only pathname for shared client-shell tests; never imported by production.
+export function usePathname(){return '/';}
