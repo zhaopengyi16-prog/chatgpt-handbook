@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">原创项目工作区示意图</title>
+  <desc id="desc">左侧项目文件，中间任务说明，右侧执行计划。仅用于教程排版展示，不是真实产品界面。</desc>
+  <rect width="960" height="520" fill="#F6F5EE"/>
+  <g stroke="#384638" stroke-width="2" fill="none">
+    <path d="M0 40H960M220 40V470M650 40V470M0 470H960"/>
+    <rect x="24" y="13" width="12" height="12" fill="#285741"/>
+    <rect x="744" y="12" width="192" height="20" fill="#E3EADF" stroke="none"/>
+    <rect x="242" y="118" width="384" height="276" fill="#fff"/>
+    <path d="M242 160H626"/>
+    <rect x="674" y="106" width="262" height="104" fill="#E3EADF"/>
+    <rect x="674" y="226" width="262" height="104" fill="#fff"/>
+    <rect x="674" y="346" width="262" height="48" fill="#285741"/>
+    <path d="M30 104H44V114H30ZM30 148H44V158H30ZM48 192H62V202H48ZM48 236H62V246H48Z"/>
+    <path d="M699 142 705 148 719 134M699 262H717M708 253V271"/>
+    <path d="M268 190H440M268 214H586M268 238H554M268 282H578M268 306H558M268 330H494M268 354H420" stroke="#9DAE9C"/>
+  </g>
+  <g font-family="system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif" fill="#232820" font-size="17">
+    <text x="48" y="26" font-size="14" font-weight="600">项目工作区</text>
+    <text x="758" y="27" font-size="13">原创示意图 · 非产品截图</text>
+    <text x="26" y="78" font-size="14" fill="#475548">文件</text>
+    <text x="58" y="115">我的项目</text>
+    <text x="58" y="159">说明文档</text>
+    <text x="76" y="203" font-size="16">README.md</text>
+    <text x="76" y="247" font-size="16">任务说明.md</text>
+    <text x="244" y="80" font-weight="600">先说清楚，你要完成什么</text>
+    <text x="262" y="145" font-size="16">任务说明.md</text>
+    <text x="678" y="80" font-weight="600">协作计划</text>
+    <text x="732" y="147" font-weight="600">01　理解背景</text>
+    <text x="694" y="181" font-size="16" fill="#475548">阅读说明，复述目标。</text>
+    <text x="732" y="267" font-weight="600">02　确认范围</text>
+    <text x="694" y="301" font-size="16" fill="#475548">列出步骤，再开始修改。</text>
+    <text x="753" y="376" fill="#fff" font-weight="600">检查计划 →</text>
+    <text x="26" y="500" font-size="14" fill="#475548">一个目标　·　一份上下文　·　一个可检查的步骤</text>
+  </g>
+</svg>
