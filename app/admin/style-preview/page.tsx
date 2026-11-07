@@ -3,11 +3,12 @@ import {requireChatGPTUser} from '../../chatgpt-auth';
 import {identity} from '@/lib/data';
 import {Unavailable} from '../../shared';
 import StyleDemo from './demo';
+import '@/public/assets/style-preview/miaomiao-font/fonts.css';
 import './preview.css';
 
 export const dynamic = 'force-dynamic';
 export const metadata:Metadata = {
-  title:'样式预览 · ChatGPT 使用手册',
+  title:'AI 妙妙屋 · 管理员样式预览',
   robots:{index:false,follow:false},
 };
 
