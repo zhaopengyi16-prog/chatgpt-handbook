@@ -1,7 +1,7 @@
 import { FIFTH_CHAPTER_REVISION } from './chapter-five-release';
 import { EXISTING_CHAPTERS, initialTaxonomy, starters } from './taxonomy-seed';
-import { GROUPS, TAXONOMY_ICONS, TAXONOMY_KEY } from './taxonomy-types';
-import type { Category, ChapterTags, Group, TaxonomyDocument, TaxonomyView } from './taxonomy-types';
+import { GROUPS, TAXONOMY_ICONS, TAXONOMY_KEY, TAXONOMY_MATERIALS } from './taxonomy-types';
+import type { Category, ChapterTags, Group, Material, TaxonomyDocument, TaxonomyView } from './taxonomy-types';
 
 export class TaxonomyError extends Error {
   constructor(public readonly status:number, message:string) { super(message); }
@@ -32,10 +32,14 @@ function label(v:unknown, min:number, max:number):string {
 }
 function category(value:unknown):Category {
   const o=object(value);
-  only(o,['id','name','description','order','icon']);
+  only(o,['id','name','description','order','icon','material']);
   if(!uint(o.order)) fail(400,'顺序必须是非负整数。');
   if(typeof o.icon!=='string' || !Object.hasOwn(TAXONOMY_ICONS,o.icon)) fail(400,'请选择内置图标。');
-  return {id:categoryId(o.id),name:label(o.name,1,40),icon:o.icon,description:label(o.description,0,200),order:o.order};
+  const hasMaterial=Object.hasOwn(o,'material');
+  if(hasMaterial && !TAXONOMY_MATERIALS.some(material=>material===o.material)) fail(400,'请选择内置材质。');
+  // Retain an existing material during legacy edits; never add a default on read.
+  return {id:categoryId(o.id),name:label(o.name,1,40),icon:o.icon,description:label(o.description,0,200),order:o.order,
+    ...(hasMaterial?{material:o.material as Material}:{})};
 }
 export function normalizeTags(value:unknown, doc:TaxonomyDocument):ChapterTags {
   const o=object(value);
@@ -201,7 +205,11 @@ export async function mutateTaxonomy(db:D1Database, method:'POST'|'PUT'|'DELETE'
   } else {
     const group=groupOf(o.group), items=doc[group];
     if(action==='create') {
-      const input=object(o.item), c=category({order:items.length,...input});
+      const input=object(o.item);
+      // Compatibility release only: accept stored material, but keep the write
+      // contract unchanged until this reader has been deployed and verified.
+      only(input,['id','name','description','order','icon']);
+      const c=category({order:items.length,...input});
       if(items.some(x=>x.id===c.id || x.name===c.name) || doc.retiredIds?.[group]?.includes(c.id)) fail(409,'分类 ID 已使用或名称重复。');
       if(items.length>=64) fail(400,'每个维度最多 64 个分类。');
       items.splice(Math.min(c.order,items.length),0,c);

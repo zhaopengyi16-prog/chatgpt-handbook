@@ -8,7 +8,7 @@ import ToolPage from '../app/tools/[tool]/page';
 import ChapterPage from '../app/chapters/[slug]/page';
 import {database} from '../lib/data';
 import {FIFTH_CHAPTER_REVISION} from '../lib/chapter-five-release';
-import {initializeTaxonomy} from '../lib/taxonomy';
+import {decodeTaxonomy,initializeTaxonomy,serializeTaxonomy} from '../lib/taxonomy';
 import {saveChapterWithTags} from '../lib/chapter-taxonomy-write';
 import {readPublicCatalog,filterCatalog} from '../lib/public-taxonomy';
 import {setHeaders,sqlite} from './runtime-mock';
@@ -151,6 +151,107 @@ for(const [i,id] of starterIds.entries()){
 }
 assert.match(String(row(starterIds[0]).title),/Blender/);
 
+// A compatibility reader accepts future material data without enabling its API editor.
+// Keep this expected list independent of the implementation's whitelist.
+const materialGroups=['tasks','tools','levels'] as const;
+const expectedMaterials=['grass','dirt','stone','water','sand','wood','ember','gem','snow'] as const;
+const knownChapterIds=new Set(seedRows.map(c=>String(c.id)));
+const readSnapshot=()=>({
+  chapters:rows(),
+  settings:sqlite.prepare('SELECT * FROM settings ORDER BY key').all(),
+  media:sqlite.prepare('SELECT * FROM media ORDER BY id').all(),
+});
+const oldReadBefore=readSnapshot();
+const oldDecoded=decodeTaxonomy(seedBytes!,knownChapterIds);
+assert(oldDecoded.state==='ready');
+assert.deepEqual(JSON.parse(serializeTaxonomy(oldDecoded.doc)),seeded);
+const oldView=await expect(api(admin));assert.equal(oldView.state,'ready');
+for(const group of materialGroups) for(const c of oldView.taxonomy[group])
+  assert(!Object.hasOwn(c,'material'),'reading old categories must not backfill a material');
+assert.equal((await readPublicCatalog(root)).ready,true);
+assert.deepEqual(readSnapshot(),oldReadBefore);
+
+for(const material of expectedMaterials) {
+  const candidate=structuredClone(seeded);candidate.tasks[0].material=material;
+  const source=JSON.stringify(candidate),parsed=decodeTaxonomy(source,knownChapterIds);
+  assert(parsed.state==='ready','stored material should be accepted: '+material);
+  assert.equal(parsed.doc.tasks[0].material,material);
+  assert.equal(parsed.doc.schema,1);assert.equal(parsed.doc.writeToken,seeded.writeToken);
+  assert.equal(parsed.raw,source);
+  assert.deepEqual(JSON.parse(serializeTaxonomy(parsed.doc)),candidate);
+}
+for(const material of [null,'lava','Grass',' grass','grass ',42,true,[],{}]) {
+  const invalid=structuredClone(seeded);invalid.tasks[0].material=material;
+  assert.equal(decodeTaxonomy(JSON.stringify(invalid),knownChapterIds).state,'invalid');
+  assert.throws(()=>serializeTaxonomy(invalid),(e:any)=>e.status===400);
+}
+// Null is invalid stored data, not a request to reset to an automatic default.
+const nullMaterial=structuredClone(seeded);nullMaterial.tools[0].material=null;
+sqlite.prepare('UPDATE settings SET value=? WHERE key=?').run(JSON.stringify(nullMaterial,null,2),key);
+try {
+  const invalidReadBefore=readSnapshot();
+  assert.equal((await expect(api(admin))).state,'invalid');
+  assert.equal((await readPublicCatalog(root)).ready,false);
+  await expect(init(),409);
+  assert.deepEqual(readSnapshot(),invalidReadBefore,'invalid material reads/init must not repair or reset data');
+} finally {sqlite.prepare('UPDATE settings SET value=? WHERE key=?').run(seedBytes!,key);}
+
+// Simulate data written by a later compatible release, not an API backdoor in this phase.
+// All nine values span the three groups; other categories deliberately stay unannotated.
+const future=structuredClone(seeded);
+const materialFixtures=expectedMaterials.map((material,index)=>({
+  group:index<7?'tasks':index===7?'tools':'levels',
+  id:index<7?taskIds[index]:index===7?'chatgpt-codex':'basic',material,
+}));
+for(const fixture of materialFixtures)
+  future[fixture.group].find((c:any)=>c.id===fixture.id).material=fixture.material;
+function assertFutureMaterials(value:any=doc()) {
+  assert.equal(value.schema,1);
+  for(const fixture of materialFixtures)
+    assert.equal(value[fixture.group].find((c:any)=>c.id===fixture.id)?.material,fixture.material,
+      'existing material must survive: '+fixture.group+'/'+fixture.id);
+  for(const group of materialGroups) for(const c of value[group]) {
+    if(!materialFixtures.some(f=>f.group===group&&f.id===c.id))
+      assert(!Object.hasOwn(c,'material'),'unannotated categories must remain unannotated');
+  }
+}
+const formattedFuture=JSON.stringify(future,null,2);
+sqlite.prepare('UPDATE settings SET value=? WHERE key=?').run(formattedFuture,key);
+const futureReadBefore=readSnapshot();
+const futureView=await expect(api(admin));assert.equal(futureView.state,'ready');assertFutureMaterials(futureView.taxonomy);
+await expect(api('admin/chapters'));
+assert.equal((await readPublicCatalog(root)).ready,true);
+browserAs();
+await html(Home(pageProps()));await html(taskPage('coding'));await html(toolPage('chatgpt-codex'));await html(chapterPage('desktop'));
+assertFutureMaterials((await expect(api('admin/export'))).taxonomy_v1);
+assert.equal(raw(),formattedFuture,'readers must preserve the exact formatted settings bytes');
+assert.equal(doc().writeToken,future.writeToken);assert.equal(doc().revision,future.revision);
+assert.deepEqual(readSnapshot(),futureReadBefore,'reads preserve every chapter/media/settings field');
+
+const beforeMaterialWrites=readSnapshot();
+for(const material of [...expectedMaterials,null]) {
+  await expect(create({...category,id:'blocked-material',material}),400);
+  assert.deepEqual(readSnapshot(),beforeMaterialWrites);
+  await expect(update('edit',{group:'tasks',id:'coding',changes:{material}}),400);
+  assert.deepEqual(readSnapshot(),beforeMaterialWrites);
+}
+// Guards must still run before the now-readable material data reaches API validation.
+for(const [who,status] of [[{},401],[member,403]] as const) {
+  await expect(api(admin,'GET',null,who),status);
+  await expect(api(admin,'POST',edits('create',{group:'tasks',item:{...category,material:'grass'}}),who),status);
+  await expect(api(admin,'PUT',edits('edit',{group:'tasks',id:'coding',changes:{material:'grass'}}),who),status);
+}
+assert.deepEqual(readSnapshot(),beforeMaterialWrites);
+const codingDescription=doc().tasks.find((c:any)=>c.id==='coding').description;
+const beforeCategoryWrite=doc();
+await expect(update('edit',{group:'tasks',id:'coding',changes:{description:'兼容读取后仍可修改普通说明。'}}));
+assert.equal(doc().tasks.find((c:any)=>c.id==='coding').description,'兼容读取后仍可修改普通说明。');
+assert.equal(revision(),beforeCategoryWrite.revision+1);
+assert.notEqual(doc().writeToken,beforeCategoryWrite.writeToken,'a successful category mutation rotates the existing CAS token');
+assertFutureMaterials();
+await expect(update('edit',{group:'tasks',id:'coding',changes:{description:codingDescription}}));
+assertFutureMaterials();
+
 // Exercise real server page components as both identities, including direct guesses, public projection and query filters.
 const draftTitles=starterIds.map(id=>String(row(id).title));
 function publicOnly(text:string){
@@ -210,9 +311,11 @@ for(const result of await Promise.all([html(Home(pageProps())),html(taskPage('co
 }
 sqlite.prepare("UPDATE chapters SET published_description=? WHERE id='desktop'").run(previousDescription);
 await expect(update('setEmptyPolicy',{emptyPolicy:'comingSoon'}));
+assertFutureMaterials();
 const noContent=await html(taskPage('website'));assert(noContent.includes('即将上线'));publicOnly(noContent);
 assert.equal((await readPublicCatalog(root)).tasks.find(c=>c.id==='website')?.count,0);
 await expect(update('setEmptyPolicy',{emptyPolicy:'hide'}));
+assertFutureMaterials();
 
 // Fill the UTF-8 byte budget with a valid fixture; the over-budget edit must return 413 without mutation.
 const beforeLimits=raw()!,nearLimit=doc();
@@ -256,6 +359,7 @@ const reversed=doc().tasks.map((x:any)=>x.id).reverse();
 await expect(update('reorder',{group:'tasks',ids:reversed}));
 assert.deepEqual(doc().tasks.map((x:any)=>x.id),reversed);
 assert.deepEqual(doc().tasks.map((x:any)=>x.order),reversed.map((_:string,i:number)=>i));
+assertFutureMaterials();
 await expect(del(category.id));await expect(create(category),409);
 
 // A draft-only classification and changed text must remain private until an explicit publish.
@@ -269,7 +373,11 @@ for(const invalidTags of [{...tagsA,tools:['website']},{...tagsA,level:['basic']
   await expect(change(id,{...original,action:'publish',tags:invalidTags}),400);assert.deepEqual(snapshot(),unchanged);
 }
 await expect(change(id,{...original,action:'publish',tags:tagsA,expectedRevision:undefined}),400);
+const beforeTaggedSave=doc();
 let saved=(await expect(change(id,{...original,action:'save',title:'private title',body:'<p>private working text</p>',tags:{...tagsA,tasks:['website','website']}}))).item;
+assert.equal(revision(),beforeTaggedSave.revision+1);
+assert.notEqual(doc().writeToken,beforeTaggedSave.writeToken,'a successful chapter/tag save rotates the existing CAS token');
+assertFutureMaterials();
 assert.deepEqual(saved.tags,tagsA);assert.deepEqual(doc().chapterTags[id],tagsA);
 assert.deepEqual(doc().publishedChapterTags[id],originalPublic);assert.deepEqual((await readPublicCatalog(root)).chapters.find(c=>c.id===id)?.tags,originalPublic);
 browserAs(member);const reader=await html(chapterPage(id,true));assert(!reader.includes('private working text'));
@@ -281,24 +389,30 @@ saved=await adminChapter(id);
 // Legacy v14 callers know neither tags nor taxonomy revision. Preserve draft tags when publishing.
 const legacy={action:'publish',version:saved.version,title:saved.title,description:saved.description,position:saved.position,body:saved.body};
 saved=(await expect(change(id,legacy))).item;
+assertFutureMaterials();
 assert.deepEqual(doc().publishedChapterTags[id],tagsA);
 assert.deepEqual((await readPublicCatalog(root)).chapters.find(c=>c.id===id)?.tags,tagsA);
 const tempTags={...tagsA,tasks:[ref]};
 saved=(await expect(change(id,{...saved,tags:tempTags,action:'publish'}))).item;
+assertFutureMaterials();
 saved=(await expect(change(id,{...saved,tags:tagsB,action:'save'}))).item;
+assertFutureMaterials();
 await expect(del(ref),409); // only present in the published snapshot, not any draft
 
 // Both optimistic locks matter. A valid chapter version cannot compensate for stale taxonomy and vice versa.
 unchanged=snapshot();
 await expect(change(id,{...saved,action:'publish',tags:tagsB,expectedRevision:saved.expectedRevision-1}),409);
 assert.deepEqual(snapshot(),unchanged);
+assertFutureMaterials();
 await expect(change(id,{...saved,action:'publish',tags:tagsB,version:saved.version-1}),409);
 assert.deepEqual(snapshot(),unchanged);
+assertFutureMaterials();
 sqlite.exec("CREATE TRIGGER interrupt_publish BEFORE UPDATE ON chapters WHEN NEW.id='desktop' BEGIN SELECT RAISE(ABORT,'fixture: chapter failure'); END");
 try {
   await assert.rejects(()=>saveChapterWithTags(db,{id,version:saved.version,publish:true,title:'should rollback',description:'',
     html:'<p>interrupted</p>',position:saved.position,now:'test',tags:tagsB,expectedRevision:saved.expectedRevision}),/fixture: chapter failure/);
   assert.deepEqual(snapshot(),unchanged);
+  assertFutureMaterials();
 } finally {sqlite.exec('DROP TRIGGER interrupt_publish');}
 
 const candidates=[{title:'Winner A',body:'<p>A body</p>',tags:tagsA},{title:'Winner B',body:'<p>B body</p>',tags:tagsB}];
@@ -309,6 +423,7 @@ assert.equal(live.version,saved.version+1);assert.equal(revision(),saved.expecte
 assert.equal(live.body,winner.body);assert.equal(live.title,winner.title);
 assert.equal(live.published_body,winner.body);assert.equal(live.published_title,winner.title);
 assert.deepEqual(doc().chapterTags[id],winner.tags);assert.deepEqual(doc().publishedChapterTags[id],winner.tags);
+assertFutureMaterials();
 await expect(del(ref)); // published ref was removed by winning publish
 
 // An unpublish/delete/restore must remove the chapter from counts and lists. Restore alone is not publish.
@@ -322,7 +437,9 @@ await expect(api('admin/chapters/'+id+'?version='+saved.version,'DELETE'));
 assert(!(await publicIds()).includes(id));browserAs(member);await assert.rejects(()=>chapterPage(id),/NOT_FOUND/);
 saved=(await expect(change(id,{action:'restore',version:saved.version+1}))).item;
 assert(!(await publicIds()).includes(id));
+assertFutureMaterials();
 await expect(change(id,{...saved,action:'publish'}));assert((await publicIds()).includes(id));
+assertFutureMaterials();
 
 // Soft-deleted rows retain their draft category reference; init never resurrects edited/deleted starters.
 await expect(create({...category,id:'private-task',name:'已删除章节独有的分类'}));
@@ -335,6 +452,7 @@ assert.deepEqual({chapters:rows(),setting:raw()},checkpoint);
 sqlite.prepare('INSERT INTO settings(key,value) VALUES (?,?)').run('private:test-only','must not appear in exports');
 const backup=await expect(api('admin/export'));
 assert.deepEqual(backup.taxonomy_v1,doc());assert(!JSON.stringify(backup).includes('must not appear in exports'));
+assertFutureMaterials(backup.taxonomy_v1);
 // Also initialize a customized v14 site: absent, unpublished, deleted and author-created IDs
 // can differ from the stock seven. Classify by ID and publication status, never by position.
 sqlite.prepare('DELETE FROM settings WHERE key=?').run(key);

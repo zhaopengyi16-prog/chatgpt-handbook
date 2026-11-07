@@ -3,7 +3,9 @@ export const TAXONOMY_KEY = 'taxonomy_v1';
 export const GROUPS = ['tasks', 'tools', 'levels'] as const;
 export type Group = typeof GROUPS[number];
 export type EmptyPolicy = 'hide' | 'comingSoon';
-export type Category = {id:string; name:string; icon:string; description:string; order:number};
+export const TAXONOMY_MATERIALS = ['grass','dirt','stone','water','sand','wood','ember','gem','snow'] as const;
+export type Material = typeof TAXONOMY_MATERIALS[number];
+export type Category = {id:string; name:string; icon:string; description:string; order:number; material?:Material};
 export type ChapterTags = {tasks:string[]; tools:string[]; level:string|null};
 export const EMPTY_TAGS = ():ChapterTags => ({tasks:[],tools:[],level:null});
 // The pre-existing chapter slug format permits names such as "constructor".
