@@ -206,9 +206,7 @@ export async function mutateTaxonomy(db:D1Database, method:'POST'|'PUT'|'DELETE'
     const group=groupOf(o.group), items=doc[group];
     if(action==='create') {
       const input=object(o.item);
-      // Compatibility release only: accept stored material, but keep the write
-      // contract unchanged until this reader has been deployed and verified.
-      only(input,['id','name','description','order','icon']);
+      only(input,['id','name','description','order','icon','material']);
       const c=category({order:items.length,...input});
       if(items.some(x=>x.id===c.id || x.name===c.name) || doc.retiredIds?.[group]?.includes(c.id)) fail(409,'分类 ID 已使用或名称重复。');
       if(items.length>=64) fail(400,'每个维度最多 64 个分类。');
@@ -222,9 +220,13 @@ export async function mutateTaxonomy(db:D1Database, method:'POST'|'PUT'|'DELETE'
       if(index<0) fail(404,'没有这个分类。');
       if(action==='edit') {
         const changes=object(o.changes);
-        only(changes,['name','icon','description']);
+        only(changes,['name','icon','description','material']);
         if(!Object.keys(changes).length) fail(400,'至少指定一项修改。');
-        const c=category({...items[index],...changes});
+        // Omission preserves a stored choice; null is only an edit command to
+        // restore automatic presentation, never a stored material value.
+        const merged:Record<string,unknown>={...items[index],...changes};
+        if(changes.material===null) delete merged.material;
+        const c=category(merged);
         if(items.some(x=>x.id!==id && x.name===c.name)) fail(409,'分类名称已使用。');
         items[index]=c;
       } else {

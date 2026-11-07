@@ -1,5 +1,6 @@
 import sanitizeHtml from 'sanitize-html';
 import {database} from './data';
+import {categoryMaterial} from './category-material';
 import {publicChapterHtml} from './legacy-images';
 import {readReaderSnapshot} from './reader-snapshot';
 import {getChapterTags, type Category, type ChapterTags, type Group, type TaxonomyDocument} from './taxonomy-types';
@@ -33,7 +34,9 @@ export async function readPublicCatalog(origin?:string):Promise<PublicCatalog> {
     return {id, ordinal:index+1, title:String(row.title ?? ''), description:excerpt(String(row.description ?? ''), origin), tags};
   });
   function categories(group:Group):PublicCategory[] {
-    return (doc?.[group] ?? []).map(c=>({...c,count:counts[group].get(c.id) ?? 0}))
+    // Resolve from the stored order before hiding empty categories. This is a
+    // display-only projection; legacy JSON remains untouched in settings.
+    return (doc?.[group] ?? []).map(c=>({...c,material:categoryMaterial(c),count:counts[group].get(c.id) ?? 0}))
       .filter(c=>c.count>0 || doc?.emptyPolicy==='comingSoon');
   }
   return {ready:!!doc, chapters, tasks:categories('tasks'),tools:categories('tools'),levels:categories('levels')};
