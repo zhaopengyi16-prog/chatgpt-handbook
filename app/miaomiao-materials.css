@@ -1,0 +1,58 @@
+/* Original integer-grid artwork. Each atlas alternates distinct 16x16 A/B
+   source tiles as AB/BA; a 64px repeat renders every source pixel at 2x. */
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='grass'] { --mm-tile: url('/assets/style-preview/materials/grass.svg'); --mm-tile-light: #9bd76a; --mm-tile-dark: #477f2c; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='dirt'] { --mm-tile: url('/assets/style-preview/materials/dirt.svg'); --mm-tile-light: #cfa36c; --mm-tile-dark: #694020; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='stone'] { --mm-tile: url('/assets/style-preview/materials/stone.svg'); --mm-tile-light: #d0d4da; --mm-tile-dark: #6d747d; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='water'] { --mm-tile: url('/assets/style-preview/materials/water.svg'); --mm-tile-light: #b9d9ee; --mm-tile-dark: #2f639f; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='sand'] { --mm-tile: url('/assets/style-preview/materials/sand.svg'); --mm-tile-light: #f3e3a8; --mm-tile-dark: #a58b4f; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='wood'] { --mm-tile: url('/assets/style-preview/materials/wood.svg'); --mm-tile-light: #ebc58f; --mm-tile-dark: #8e5e33; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='ember'] { --mm-tile: url('/assets/style-preview/materials/ember.svg'); --mm-tile-light: #f8c878; --mm-tile-dark: #a9411d; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='gem'] { --mm-tile: url('/assets/style-preview/materials/gem.svg'); --mm-tile-light: #d1b5ec; --mm-tile-dark: #63418f; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) [data-material='snow'] { --mm-tile: url('/assets/style-preview/materials/snow.svg'); --mm-tile-light: #fffdf6; --mm-tile-dark: #c6d6e0; }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) :is(.mm-material,.mm-color-chip) {
+  --mm-tile-edges: inset 0 1px 0 var(--mm-tile-light),inset 0 -2px 0 var(--mm-tile-dark);
+  background-color: var(--mm-material,var(--mm-stone));
+  background-image: var(--mm-tile); background-size: 64px 64px;
+  background-repeat: repeat; image-rendering: pixelated;
+  box-shadow: var(--mm-tile-edges);
+}
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) .mm-logo { box-shadow: var(--mm-tile-edges),var(--mm-shadow); }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) .mm-route {
+  position: relative; isolation: isolate; color: var(--mm-ink);
+  box-shadow: var(--mm-tile-edges),4px 4px 0 var(--mm-ink);
+}
+/* The textured frame never sits behind text. No new DOM or layout dimensions. */
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) .mm-route::before {
+  content: ''; position: absolute; inset: 8px; z-index: -1;
+  background: var(--mm-card); pointer-events: none;
+}
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) .mm-route:hover { color: var(--mm-ink); }
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) .mm-route > * { position: relative; }
+
+/* Borders live entirely in decorative bands, never over reading surfaces.
+   All fixed SVG coordinates and repeat sizes are integer 2x samples. */
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) :is(.mm-ground > div:first-child,.mm-footer-grass) {
+  position: relative; z-index: 2; border-top: 0; border-bottom: 0;
+}
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) :is(.mm-ground > div:first-child,.mm-footer-grass)::before {
+  content: ''; position: absolute; inset: -14px 0 auto; height: 16px;
+  background-image: url('/assets/style-preview/materials/flower.svg'),url('/assets/style-preview/materials/grass-edge.svg');
+  background-size: 512px 16px,128px 8px; background-position: left bottom;
+  background-repeat: repeat-x; image-rendering: pixelated; pointer-events: none;
+}
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) :is(.mm-ground > div:first-child,.mm-footer-grass)::after {
+  content: ''; position: absolute; inset: auto 0 -4px; height: 4px;
+  background: url('/assets/style-preview/materials/grass-fringe.svg') left top / 128px 4px repeat-x;
+  image-rendering: pixelated; pointer-events: none;
+}
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) :is(.mm-ground > div:last-child,.mm-footer-dirt) {
+  position: relative; z-index: 1; border-bottom: 0;
+  background-image: url('/assets/style-preview/materials/dirt-depth.svg'),var(--mm-tile);
+  background-size: 64px 32px,64px 64px;
+  background-position: left bottom,left top; background-repeat: repeat-x,repeat;
+}
+:where(.miaomiao-site,.style-preview[data-brand='miaomiao']) .mm-footer-dirt::after {
+  content: ''; position: absolute; inset: auto 0 -6px; height: 6px;
+  background: url('/assets/style-preview/materials/dirt-fringe.svg') left top / 128px 6px repeat-x;
+  image-rendering: pixelated; pointer-events: none;
+}

@@ -1,12 +1,14 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useEffect} from 'react';
+import {useSessionUser} from './session-user';
 export async function api(path:string,options:RequestInit={}) {
  const response=await fetch('/api/'+path,{...options,headers:{...(!(options.body instanceof FormData)?{'Content-Type':'application/json'}:{}),...options.headers},cache:'no-store'});
  const data:any=await response.json();if(!response.ok)throw new Error(data.error||'操作失败，请重试。');return data;
 }
 export function Account(){
- const [user,setUser]=useState<any>(null);
- useEffect(()=>{api('me').then(d=>setUser(d.user)).catch(()=>{});},[]);
+ const {user,status,refresh}=useSessionUser();
+ if(status==='loading')return <span className="account-status" role="status">正在确认账号…</span>;
+ if(status==='error')return <button className="account-link" type="button" onClick={()=>void refresh()}>重试账号状态</button>;
  return user?<><a href={user.admin?'/admin':'/community'}>{user.admin?'管理后台':'我的社区'}</a><a className="account-link" href="/signout-with-chatgpt?return_to=/" target="_top">退出</a></>:<a href="/signin-with-chatgpt?return_to=%2Fcommunity" target="_top">登录</a>;
 }
 export function ReadingTools(){
