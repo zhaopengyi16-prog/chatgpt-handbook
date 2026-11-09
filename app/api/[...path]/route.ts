@@ -7,6 +7,8 @@ import { isLegacyImageUrl } from '@/lib/legacy-image-url';
 import { adminTaxonomy, mutateTaxonomy, readTaxonomy, TaxonomyError } from '@/lib/taxonomy';
 import { TAXONOMY_KEY } from '@/lib/taxonomy-types';
 import { adminChaptersWithTags, saveChapterWithTags } from '@/lib/chapter-taxonomy-write';
+import { PROBE_ACTIONS, probeIdentity, runPlatformProbe, type ProbeAction } from '@/lib/platform-probe';
+import { platformProbePage } from '@/lib/platform-probe-page';
 export const dynamic = 'force-dynamic';
 class HttpError extends Error { constructor(public status:number, message:string) { super(message); } }
 function fail(status:number,message:string): never { throw new HttpError(status,message); }
@@ -27,6 +29,10 @@ async function handle(req:Request, parts:string[]) {
  try {
   const db=database(), method=req.method, url=new URL(req.url), adminPath=parts[0]==='admin';
   if(!['GET','HEAD'].includes(method) && req.headers.get('origin')!==url.origin) fail(403,'请求来源不正确，请从网站页面重新操作。');
+  // Router params are decoded per segment. Reject probe lookalikes before any
+  // seed/bootstrap, including encoded separators inside a decoded segment.
+  const probeLike=parts.join('/').replaceAll('\\','/').startsWith('admin/platform-probe');
+  if(probeLike && (!adminPath || parts[1]!=='platform-probe' || parts.some(part=>/[\\/?#]/.test(part)))) fail(404,'接口不存在。');
   const readerPreview = adminPath && parts[1]==='reader-preview' && parts.length===2 && method==='POST';
   // Reader hydration and retained R2 images must not replay historical content releases.
   // These read paths still pass all existing identity and permission checks.
@@ -34,11 +40,26 @@ async function handle(req:Request, parts:string[]) {
   const readerMedia = parts.length===2 && parts[0]==='media' && method==='GET';
   // The taxonomy initializer checks the existing v14 baseline; never replay old releases here.
   const taxonomyPath = adminPath && parts[1]==='taxonomy';
-  if(!readerPreview && !readerIdentity && !readerMedia && !taxonomyPath) await ensureSeed();
-  const user=await identity();
+  // The entire temporary probe namespace must remain read-only, including invalid requests.
+  // identity() can initialize owner_user_id; this path must only read an existing owner.
+  const platformProbe = adminPath && parts[1]==='platform-probe';
+  if(!readerPreview && !readerIdentity && !readerMedia && !taxonomyPath && !platformProbe) await ensureSeed();
+  const user=platformProbe ? await probeIdentity(db) : await identity();
   if(adminPath && !user?.admin) fail(user?403:401,'请使用站点所有者账号登录后台。');
   const guestPost = !user && !adminPath && method==='POST' && parts.length===1 && ['topics','replies'].includes(parts[0]);
   if(!['GET','HEAD'].includes(method) && !user && !guestPost) fail(401,'请先登录再操作。');
+  if(platformProbe) {
+    if(parts.length!==2) fail(404,'接口不存在。');
+    if(url.search) fail(400,'诊断接口不接受查询参数。');
+    if(method==='GET') return platformProbePage();
+    if(method!=='POST') fail(405,'诊断接口只接受 GET 和 POST。');
+    if(req.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json') fail(415,'诊断请求必须使用 JSON。');
+    let probeBody:unknown;
+    try { probeBody=JSON.parse(new TextDecoder().decode(await bounded(req,1024))); }
+    catch(e) { if(e instanceof HttpError) throw e; fail(400,'诊断请求无效。'); }
+    if(!probeBody || typeof probeBody!=='object' || Array.isArray(probeBody) || Object.keys(probeBody).length!==1 || !('action' in probeBody) || !PROBE_ACTIONS.includes(probeBody.action as ProbeAction)) fail(400,'请选择一个固定诊断项目。');
+    return json({probe:'platform-probe-v1',result:await runPlatformProbe(db,req,probeBody.action as ProbeAction)});
+  }
   const guest = guestPost ? await guestIdentity(req) : null;
   if(guestPost && !guest) fail(401,'请刷新页面并允许本站 Cookie 后再提交游客留言。');
   const authorId = user?.id || guest;
