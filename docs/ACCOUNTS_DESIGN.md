@@ -1,25 +1,27 @@
-# 本站账号与可选 ChatGPT 绑定设计
+# 本站账号一期设计与二期绑定边界
 
-状态：**仅设计，等待作者与 Claude 审核；未实现、未迁移、未合并、未发布。**
+状态：**PR #9 设计审核通过，按作者最新决定修订；仅文档，不代表账号功能已实现、迁移或发布。先完成平台探针 PR，停下等审核；探针结果出来前不写账号代码。**
 
-日期：2026-11-09（北京时间）。分支：`plan/accounts`。代码基线：main `f8fb0fa811b8a782da449d1c4cbcdcc2af9d2fa6`（PR #8 已合并）。当前线上为 Sites v19；其功能源码对应 `fa3dd1b`，后续差异是报告。本批唯一新增文件为本文。
+日期：2026-11-09（北京时间）。分支：`plan/accounts`。代码基线：main `f8fb0fa811b8a782da449d1c4cbcdcc2af9d2fa6`（PR #8 已合并）。当前线上为 Sites v19；其功能源码对应 `fa3dd1b`，后续差异是报告。本文为账号设计文档；本次仅同步作者已批准的范围和前置条件。
 
 ## 1. 目标、既定规则与实施边界
 
-访客可直接以用户名、密码注册和登录，不必拥有 ChatGPT。本站账号可主动绑定一个 ChatGPT 身份，也可始终不绑定。保留游客待审发言、原 ChatGPT 登录、站点所有者后台、编辑器、草稿/发布、图库、分类和原有链接。
+访客可直接以用户名、密码注册和登录，不必拥有 ChatGPT。一期只做本站账号注册、登录、恢复码、后台管理（审核模式、封禁、一次性重置码、强制下线）、前三条发言审核与注销。保留游客待审发言、原 ChatGPT 登录、站点所有者后台、编辑器、草稿/发布、图库、分类和原有链接。
 
-作者已确定：注册时显示一次恢复码；丢失时由管理员人工核验后生成一次性重置码；新账号前 3 帖需审核，之后可直接发布；管理员可强制审核、封禁和强制下线；注销删除账号数据，保留帖子并显示“已注销用户”，注销前允许自行删帖。
+**ChatGPT 绑定/解绑移到第二期**：一期不建 `account_chatgpt_links`，不提供绑定页面、接口或 challenge，不在 `identity()` 中实现绑定分支，不合并本站与 ChatGPT 帖子所有权。二期需独立设计、迁移与审核；当前浏览器同时登录两种身份不等于绑定。
 
-本设计需要突破 AGENTS.md 的两项既有实施边界：**修改 `identity()`/精确权限分派，以及新增数据库表/迁移**。这是本批先出文档的理由，不视为已获得代码实施授权。本文列明变更后停止，下一批须经作者与 Claude 审核。现有 AGENTS.md、业务文件、迁移文件和依赖本批均不修改。
+作者已确定：注册时显示一次恢复码；丢失时仅在用户仍能登录该本站账号或作者线下认识本人的情况下发一次性重置码。主题和回复合计 3 条不同发言获审核通过后，后续发言直接发布；被拒的不计，提前提交的第 4 条仍待审。管理员可强制审核、封禁和强制下线；注销删除账号数据，本站账号帖子保留并显示“已注销用户”，注销前允许自行删帖。
 
-不新增依赖，不引入外部账号服务，不收集本站用户的邮箱、手机号、实名、头像或长期设备画像。账号模块不改章节正文、sanitize、旧截图过滤、taxonomy schema/CAS 或既有发布事务。
+作者已批准未来修改 `identity()`、API 精确分派，以及新增 **6 张表和 `0002` 迁移**。`app/chatgpt-auth.ts` 和 `lib/guests.ts` 明确不改。此授权有先后顺序：**先提交仅 owner 可访问的只读平台探针 PR；探针结果出来并经过审核后才开始账号实现**。本轮不创建账号模块、迁移文件或生产数据，不发布网站。
+
+不新增依赖，不引入外部账号服务，不收集本站用户的邮箱、手机号、实名、头像或长期设备画像。账号模块不改章节正文、sanitize、旧截图过滤、taxonomy schema/CAS 或既有发布事务。私有完整备份最多保留 30 天，允许仅含随机账号 ID 与时间的注销清单；没有完整备份路径前不开放注册。
 
 ## 2. 对现状的核对
 
 | 位置（main 基线） | 当前行为 | 对设计的影响 |
 | --- | --- | --- |
 | `app/chatgpt-auth.ts` | 从 Sites 注入的 `oai-authenticated-user-*` 读取平台身份；有安全 returnTo 与平台登录/退出链接 | 复用，不将本站密码接入该函数，不伪造平台头 |
-| `lib/data.ts: identity()` | 仅识别 ChatGPT；`owner_user_id` 与当前平台 ID 比较；尚未建立 owner 时，可信平台邮箱匹配环境变量才执行一次性初始化 | 管理权源保持独立；注册、绑定、恢复接口绝不能设置 owner |
+| `lib/data.ts: identity()` | 仅识别 ChatGPT；`owner_user_id` 与当前平台 ID 比较；尚未建立 owner 时，可信平台邮箱匹配环境变量才执行一次性初始化 | 管理权源保持独立；注册、恢复接口绝不能设置 owner |
 | `app/api/[...path]/route.ts` | 非 GET/HEAD 先检查严格同 Origin；再检查 admin；未登录写操作仅允许游客 POST topics/replies | 新匿名注册/登录需要精确新增例外，不能声称原 gate 不变就能工作 |
 | 同上 | `pending = !user`，pending 同时决定 guest 限流与 `author_kind` | 必须拆成“身份种类”和“审核状态”，本站待审账号不是游客 |
 | `db/schema.ts` | topics/replies 的作者 ID、姓名是字符串，无用户外键；回复有 topic 外键 | 可新增独立账号表，保持原帖子 ID、ChatGPT 作者 ID 与正文 |
@@ -41,7 +43,7 @@ admin = currentTrustedChatGPT != null
         AND currentTrustedChatGPT.userId === settings.owner_user_id
 ```
 
-`accounts`、会话表、绑定表都没有 role/admin 字段。任何请求体中的 `admin`、`role`、`owner_user_id`、`authorId` 一律拒绝或不进入受信模型。用户名/昵称、绑定关系、曾经以 ChatGPT 登录过都不能赋予管理员权限。**绑定所有者 ChatGPT 的账号，仅凭密码 Cookie 发出的请求仍然不是管理员。**
+一期 `accounts`、会话表都没有 role/admin 字段；二期任何绑定表也不得增加此字段。任何请求体中的 `admin`、`role`、`owner_user_id`、`authorId` 一律拒绝或不进入受信模型。用户名/昵称、曾经以 ChatGPT 登录过都不能赋予管理员权限。**一期密码 Cookie 永远不产生管理员权限；未来二期即使绑定所有者 ChatGPT，仅凭密码 Cookie 的请求仍然不是管理员。**
 
 保留原 owner 初始化机制，只允许 `getChatGPTUser()` 得到的可信平台用户参与；没有配置或没有匹配时不设 owner，不采用“第一个注册者就是管理员”。本次 owner 平台身份与本地账号被封禁/注销是独立事项，不能把唯一站点管理员锁死。
 
@@ -49,15 +51,15 @@ admin = currentTrustedChatGPT != null
 
 ### 3.2 密码算法、迭代次数与平台限制
 
-方案参数：仅使用 Workers 内置 `crypto.subtle` 的 **PBKDF2-HMAC-SHA256，100,000 次，独立随机 32 字节盐，32 字节派生结果**。盐来自 `crypto.getRandomValues`，每次注册/改密/重置重新生成；编码为单个字段，例如 `pbkdf2-sha256$v1$100000$<salt-base64url>$<digest-base64url>`。校验按记录内的已支持版本与参数执行，严格限制长度/参数白名单，不能盲信数据库里任意大的迭代数字，也不能修改默认常量后使旧账号失效。使用 Workers `crypto.subtle.timingSafeEqual` 比较等长结果，不退化成提前返回的逐字节比较。[S1]
+方案仅使用 Workers 内置 `crypto.subtle` 的 **PBKDF2-HMAC-SHA256，独立随机 32 字节盐，32 字节派生结果**。迭代次数已由作者决定：平台探针在实际 Sites 运行环境支持 **600,000** 次就采用 600,000；否则采用 **100,000**。两档都不能完成或平台条件不足时保持账号功能关闭，不寻找更低档回退。探针使用固定的非真实测试口令，不测试真实用户密码；分别记录两档耗时或安全错误码，见 §10.1。
 
-**100,000 是保守的生产兼容提案，不是已测得的 Sites 上限，也不等于满足 OWASP 建议。** 官方历史 workerd 源码曾硬限制 100,000；官方维护者随后说明开源 workerd 改为可配置、移除默认上限，但生产 Workers 当时仍有限制。当前官方 WebCrypto 文档未承诺本项目 Sites 的迭代上限。因此不能把本地 Node/Wrangler 的成功当作生产支持 600,000 次的证据。[S2]
+盐来自 `crypto.getRandomValues`，每次注册/改密/重置重新生成。编码例为 `pbkdf2-sha256$v1$600000$<salt-base64url>$<digest-base64url>`（若最终选 100,000，记录对应参数）。校验按记录内已支持版本/参数执行，严格限制长度与参数白名单，不能盲信数据库里任意大的迭代数字；修改默认参数也不能使已有账号失效。使用 Workers `crypto.subtle.timingSafeEqual` 比较等长结果，不退化成提前返回的逐字节比较。[S1]
 
-OWASP 当前建议 PBKDF2-HMAC-SHA256 使用 600,000 次；本提案 100,000 低于该值。在线限流不弥补数据库泄露后的离线破解成本。实施前需在实际 Sites 运行环境用非真实密码的受控用例确认支持次数、耗时与配额；若支持 600,000 且成本可接受，提交参数更新供审核。若只支持 100,000，须由作者明确接受该折中，否则保持注册关闭。**不通过重复调用/自制加密算法冒充 600,000 次，也不因超时自动降低次数。**[S3]
+**实际 Sites 的 PBKDF2 上限目前未测得。** 官方历史 workerd 源码曾硬限制 100,000；官方维护者随后说明开源 workerd 改为可配置、移除默认上限，但生产 Workers 当时仍有限制。当前官方 WebCrypto 文档未承诺本项目 Sites 的迭代上限，本地 Node/Wrangler 成功也不证明生产支持。[S2] OWASP 当前建议 PBKDF2-HMAC-SHA256 600,000 次；作者已接受平台不支持时采用 100,000 的条件折中，但仍须如实记录该值低于建议，在线限流不能弥补数据库泄露后的离线破解成本。**不通过重复调用/自制算法冒充 600,000 次，不在每次用户请求超时时自动降档。**[S3]
 
-Workers 通用 CPU 配额与 PBKDF2 单次迭代上限不同：官方 Free HTTP 请求 CPU 10 ms；Paid 默认 30 s，可配置到 5 min。Sites 使用的实际配额本批未知，不能套用其中某档作上线保证。[S4]
+Workers 通用 CPU 配额与 PBKDF2 单次迭代上限不同：官方 Free HTTP 请求 CPU 10 ms；Paid 默认 30 s，可配置到 5 min。Sites 实际配额本批未知；探针 wall-clock 耗时不是可用 CPU 配额证明，报告必须区分支持/报错/超时和测量环境。[S4] Workers 的 `performance.now()` / `Date.now()` 在没有 I/O 的 CPU 操作期间可能不前进，测得 0 ms 不构成真实耗时证据。浏览器观测的往返时间（RTT）须单独列出，注明包含网络、鉴权和 D1，不能当作 PBKDF2 本身耗时。[S10]
 
-密码为 15–128 个 Unicode 码点、UTF-8 不超过 512 B，允许空格和长口令，不 trim、不静默规范化、不截断。校验两次输入一致，前端支持密码管理器与粘贴；服务端所有入口实施同一限制；密码字段不得复用现有 route.ts 的 `text()`，因为它会 trim。账号请求体最多 8 KiB，先限流再 KDF。未知用户名也执行固定参数 dummy KDF，避免明显的用户存在性时间差。只记录事件类型、结果码和请求关联号；不记录密码、请求体、Cookie、恢复码、重置码、完整认证头或密码哈希。异常响应不回显 SQL 参数和提交值。
+密码为 **10–128 个 Unicode 码点、UTF-8 不超过 512 B**，允许空格和长口令，不 trim、不静默规范化、不截断。校验两次输入一致，前端支持密码管理器与粘贴；服务端所有入口同一限制；密码字段不得复用 route.ts 的 `text()`，因为它会 trim。账号请求体最多 8 KiB，先限流再 KDF。未知用户名也执行最终选定参数的 dummy KDF，避免明显的用户存在性时间差。只记录事件类型、结果码和请求关联号；不记录密码、请求体、Cookie、恢复码、重置码、完整认证头或密码哈希。异常响应不回显 SQL 参数和提交值。
 
 ### 3.3 服务端会话与 CSRF
 
@@ -65,13 +67,13 @@ Cookie：`__Host-mm-session=<32随机字节的base64url>; Path=/; HttpOnly; Secu
 
 绝对期限 7 天，闲置期限 24 小时；last_seen 最多每 15 分钟更新一次，真实有效期以服务端为准。登录成功生成全新令牌，不接受客户端指定 session ID；同名Cookie出现多份时拒绝解析，不任取第一份。每请求查会话、账号状态与 `session_epoch`，禁止跨请求缓存授权；使用 D1 主库读取，避免副本延迟使封禁/强制下线暂时失效。[S6]
 
-退出删除当前会话并清 Cookie；管理员“强制下线”、改密、重置、封禁/解封递增账号 session_epoch 并删除全部会话。登录创建会话须条件检查密码验证时的 epoch/凭据/status仍相同（active为普通访问，banned为上述安全白名单），否则与同时改密/封禁竞争时拒绝建立旧会话。绑定/解绑也撤销并旋转本站会话。会话不保存任何管理员布尔值。封禁操作先使所有旧会话失效；之后正确密码仍可新建当前epoch的**受限安全会话**，只允许 GET account/自己的posts、POST logout/password/recovery、DELETE自己的posts/account。权限每请求从status推导，不另存role；论坛发帖/编辑、profile、绑定/解绑及全部后台接口拒绝。这样封禁用户仍可改密、保存恢复码或注销，不会被锁死在登录门外。
+退出删除当前会话并清 Cookie；管理员“强制下线”、改密、重置、封禁/解封递增账号 session_epoch 并删除全部会话。登录创建会话须条件检查密码验证时的 epoch/凭据/status仍相同（active为普通访问，banned为上述安全白名单），否则与同时改密/封禁竞争时拒绝建立旧会话。会话不保存任何管理员布尔值。封禁操作先使所有旧会话失效；之后正确密码仍可新建当前epoch的**受限安全会话**，只允许 GET account/自己的posts、POST logout/password/recovery、DELETE自己的posts/account。权限每请求从status推导，不另存role；论坛发帖/编辑、profile 及全部后台接口拒绝。这样封禁用户仍可改密、保存恢复码或注销，不会被锁死在登录门外。
 
 收到格式错误/伪造的本站Cookie时，公开只读可按游客展示，但携带它的写请求先拒绝401并要求清理/重新登录，不能暗中降级成游客发帖。主动清除身份后仍可走原游客待审流程；不宣称账号封禁可以永久识别匿名浏览者。
 
-本地会话退出不会退出 ChatGPT 平台。UI 分别说明“退出本站账号”和“退出 ChatGPT”；用户选择仅密码模式但浏览器仍带 owner 的平台身份时，应先走原平台退出流程。后台强制下线只能撤销本站会话，不能声称撤销 ChatGPT 平台会话；被封禁的绑定账号在 ChatGPT 入口也要经过本地封禁判断（owner 本次平台管理身份除外）。
+本地会话退出不会退出 ChatGPT 平台。UI 分别说明“退出本站账号”和“退出 ChatGPT”；用户选择仅密码模式但浏览器仍带 owner 的平台身份时，应先走原平台退出流程。后台强制下线只能撤销本站会话，不能声称撤销 ChatGPT 平台会话。一期没有身份绑定，本地封禁只作用于本站账号；原 ChatGPT 身份是独立主体，不能宣称可凭本地账号推断并封禁它。
 
-**应用所有写入口**（注册、登录、退出、改密、恢复、绑定、解绑、注销、发言、后台）统一在解析主体/查账户/执行 KDF 前检查 Origin。要求与部署侧配置 `AUTH_PUBLIC_ORIGIN` 的本站受信 HTTPS origin 精确匹配，且请求目标也匹配；切换自定义域名时显式更新配置并重新登录，不从客户端Host推导信任；缺失、`null`、多值、错误端口、相似子域均返回 403。不接受用 Referer 或 X-Forwarded-Host 绕过；不开放带凭据的跨域 CORS。维持现有 route 的同源检查，并在未来实施中核实 Sites 转发的请求 origin 契约。SameSite 仅为补充，不替代 Origin。平台自管的 `/signin-with-chatgpt`、`/callback`、`/signout-with-chatgpt` 继续由 Sites 处理，不在应用自造 OAuth 回调或改写为密码登录。
+**应用所有写入口**（注册、登录、退出、改密、恢复、注销、发言、后台）统一在解析主体/查账户/执行 KDF 前检查 Origin。要求与部署侧配置 `AUTH_PUBLIC_ORIGIN` 的本站受信 HTTPS origin 精确匹配，且请求目标也匹配；切换自定义域名时显式更新配置并重新登录，不从客户端Host推导信任；缺失、`null`、多值、错误端口、相似子域均返回 403。不接受用 Referer 或 X-Forwarded-Host 绕过；不开放带凭据的跨域 CORS。维持现有 route 的同源检查，并在未来实施中核实 Sites 转发的请求 origin 契约。SameSite 仅为补充，不替代 Origin。平台自管的 `/signin-with-chatgpt`、`/callback`、`/signout-with-chatgpt` 继续由 Sites 处理，不在应用自造 OAuth 回调或改写为密码登录。
 
 ### 3.4 用户名、昵称及双维限流
 
@@ -79,7 +81,7 @@ Cookie：`__Host-mm-session=<32随机字节的base64url>; Path=/; HttpOnly; Secu
 
 用户名与昵称都执行保留名称检查：NFKC、大小写折叠、移除空格/常见分隔符后，禁止 `admin`、`administrator`、`root`、`moderator`、`official`、`miaomiao`、`miaomiaohouse`、`管理员`、`站长`、`版主`、`妙妙屋`、`AI妙妙屋`、`官方` 及带这些保留词的伪装变体。拒绝控制字符、双向文本控制符、零宽格式字符与不可见昵称。昵称 2–24 个 Unicode 码点，用纯文本渲染；昵称不是唯一凭证，不授予官方标识。官方标识仅由本次可信 owner 服务器输出。
 
-本站账号新发言忽略客户端 authorName，读取账号昵称；游客/普通 ChatGPT 成员新填写的发言昵称同样检查保留词（不回写历史昵称），防止绕开注册页冒充。原平台 owner 的实际发言可带服务器生成的官方标识；与其绑定的**密码登录**账号不获得此标识。
+本站账号新发言忽略客户端 authorName，读取账号昵称；游客/普通 ChatGPT 成员新填写的发言昵称同样检查保留词（不回写历史昵称），防止绕开注册页冒充。原平台 owner 的实际发言可带服务器生成的官方标识；任何只凭本站密码登录的账号均不获得此标识。
 
 初始限流参数（项目提案，非平台保证）：
 
@@ -88,7 +90,7 @@ Cookie：`__Host-mm-session=<32随机字节的base64url>; Path=/; HttpOnly; Secu
 | 登录 | 每 15 分钟 30 次尝试 | 每 15 分钟 10 次尝试 | 用户名失败 5 次锁 15 分钟；IP 失败 20 次锁 15 分钟 |
 | 注册 | 每小时 5 次尝试 | 每小时 5 次尝试 | 达上限锁到窗口结束，包括名称冲突/格式失败 |
 | 恢复/重置 | 每 15 分钟 10 次尝试 | 每 15 分钟 5 次尝试 | 独立恢复桶锁 15 分钟，不无限延长密码登录锁 |
-| 改密/解绑/注销的密码复核 | 每 15 分钟 20 次 | 每账号 15 分钟 5 次失败 | 独立敏感操作锁 15 分钟 |
+| 改密/恢复码重生成/注销的密码复核 | 每 15 分钟 20 次 | 每账号 15 分钟 5 次失败 | 独立敏感操作锁 15 分钟 |
 
 另设全站认证尝试每分钟 120 次的成本上限；所有桶均在 KDF 前用 D1 原子 UPSERT/条件 UPDATE 预约，不使用 Worker 内存 Map。并发和多个边缘实例不能超发；锁内请求不再次延长锁期。登录成功不清 IP/全站桶；不允许用一个正确账号洗掉攻击来源计数。返回 429 与 Retry-After；未知用户名也进入同样计数。发生存储错误时认证写入失败关闭，不放行无限尝试。
 
@@ -98,27 +100,26 @@ IP 只接受**核实过 Sites 可信转发链路**的来源。不能直接相信
 
 ### 3.5 最小数据
 
-账号资料只有内部随机 ID、用户名、昵称、密码哈希编码、创建时间、状态。没有邮箱、手机号、实名。会话、恢复摘要、绑定的 ChatGPT subject、限流计数和审核进度是实现本任务必需的独立安全表，下面逐表列出；不能将“只保存五类资料”解释成不存撤销会话或恢复所需的数据。
+账号资料只有内部随机 ID、用户名、昵称、密码哈希编码、创建时间、状态。没有邮箱、手机号、实名。会话、恢复摘要、限流计数和审核进度是实现本任务必需的独立安全表，下面逐表列出；不能将“只保存五类资料”解释成不存撤销会话或恢复所需的数据。
 
-绑定只保存平台不透明 userId，不复制 ChatGPT 邮箱或姓名。原平台登录解析临时读取邮箱以保持现有 owner 初始化逻辑；这些数据不进入本站 accounts 表、日志或新的备份资料字段。
+一期不保存任何 ChatGPT 绑定资料，不复制 ChatGPT 邮箱或姓名。原平台登录解析临时读取邮箱以保持现有 owner 初始化逻辑；这些数据不进入本站 accounts 表、日志或新的备份资料字段。
 
 ## 4. 新表、迁移 SQL 与事务约束
 
 ### 4.1 数据结构
 
-共新增 7 张表；不 ALTER/重建现有 chapters、media、topics、replies、settings、guest_limits；不改已有 author_id，无用户资料批量初始化。
+共新增 6 张表；不 ALTER/重建现有 chapters、media、topics、replies、settings、guest_limits；不改已有 author_id，无用户资料批量初始化。
 
 | 表 | 用途与生命周期 |
 | --- | --- |
 | `accounts` | 最小账号资料；status 只有 active/banned，永久注销实际 DELETE |
 | `account_controls` | 审核模式 auto/manual；会话撤销 epoch；账号写 CAS revision/token；无角色字段 |
 | `account_sessions` | 令牌摘要、账号、epoch、创建/最后访问/绝对到期；撤销删除，过期清理 |
-| `account_chatgpt_links` | 一账号最多一个 ChatGPT，一 ChatGPT 最多一个账号；明确绑定时间 |
-| `account_challenges` | 恢复码、管理员重置码、绑定一次性 nonce 的摘要；绑定 nonce 限定发起会话和待绑定的平台subject；使用后删除 |
-| `account_topic_credits` | 前 3 个审核通过主题帖的去重凭据；最多 3 行/账号；删除帖子不倒扣进度，注销随账号删除 |
+| `account_challenges` | 恢复码、管理员重置码的摘要；仅 recovery/reset 两种用途，使用后删除 |
+| `account_contribution_credits` | 主题和回复合计前 3 条审核通过发言的去重凭据；以内容种类+ID 唯一，最多 3 行/账号；删帖不倒扣，注销随账号删除 |
 | `account_rate_limits` | 无明文 IP/用户名的短期限流桶；没有长期设备档案 |
 
-`accounts_v1_config` 在 settings 中保存 `{schema:1, initialized:false, registrationOpen:false}`，独立于 `taxonomy_v1`。initialized 是结构/运行条件已验证的单向标记，registrationOpen 才是暂停新注册的开关。迁移完成、核验运行条件后才由受控步骤设置 initialized=true；此后密码登录、已有会话、绑定、封禁与审核检查持续工作，关闭 registrationOpen 不能停用这些检查。存在账号后不允许把 initialized 改回false或删配置来模拟旧库。若以后要暂停密码登录，应另审独立维护机制，不复用注册开关。两字段不能由注册/普通用户写入。密码字段包含算法与盐，所以无需额外的个人资料字段。
+`accounts_v1_config` 在 settings 中保存 `{schema:1, initialized:false, registrationOpen:false}`，独立于 `taxonomy_v1`。initialized 是结构/运行条件已验证的单向标记，registrationOpen 才是暂停新注册的开关。迁移完成、核验运行条件后才由受控步骤设置 initialized=true；此后密码登录、已有会话、封禁与审核检查持续工作，关闭 registrationOpen 不能停用这些检查。存在账号后不允许把 initialized 改回false或删配置来模拟旧库。若以后要暂停密码登录，应另审独立维护机制，不复用注册开关。两字段不能由注册/普通用户写入。密码字段包含算法与盐，所以无需额外的个人资料字段。
 
 ### 4.2 拟议 Up SQL（仅文档；实施后才生成 `drizzle/0002_accounts.sql`）
 
@@ -157,38 +158,32 @@ CREATE TABLE account_sessions (
 CREATE INDEX idx_account_sessions_owner ON account_sessions(account_id);
 CREATE INDEX idx_account_sessions_expiry ON account_sessions(expires_at);
 
-CREATE TABLE account_chatgpt_links (
-  account_id TEXT PRIMARY KEY NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-  chatgpt_id TEXT NOT NULL UNIQUE,
-  created_at INTEGER NOT NULL
-);
-
 CREATE TABLE account_challenges (
   token_hash TEXT PRIMARY KEY NOT NULL,
   account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-  purpose TEXT NOT NULL CHECK (purpose IN ('recovery','reset','link')),
-  bound_session_hash TEXT REFERENCES account_sessions(token_hash) ON DELETE CASCADE,
-  link_chatgpt_id TEXT,
+  purpose TEXT NOT NULL CHECK (purpose IN ('recovery','reset')),
   created_at INTEGER NOT NULL,
   expires_at INTEGER,
   UNIQUE (account_id,purpose),
   CHECK (length(token_hash) = 64),
   CHECK (expires_at IS NULL OR expires_at > created_at),
   CHECK (
-    (purpose = 'recovery' AND bound_session_hash IS NULL AND link_chatgpt_id IS NULL AND expires_at IS NULL)
-    OR (purpose = 'reset' AND bound_session_hash IS NULL AND link_chatgpt_id IS NULL AND expires_at IS NOT NULL)
-    OR (purpose = 'link' AND bound_session_hash IS NOT NULL AND link_chatgpt_id IS NOT NULL AND expires_at IS NOT NULL)
+    (purpose = 'recovery' AND expires_at IS NULL)
+    OR (purpose = 'reset' AND expires_at IS NOT NULL)
   )
 );
 CREATE INDEX idx_account_challenges_expiry ON account_challenges(expires_at);
 
-CREATE TABLE account_topic_credits (
+CREATE TABLE account_contribution_credits (
   account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-  topic_id TEXT NOT NULL UNIQUE,
+  content_kind TEXT NOT NULL CHECK (content_kind IN ('topic','reply')),
+  content_id TEXT NOT NULL,
   credited_at INTEGER NOT NULL,
-  PRIMARY KEY (account_id,topic_id)
+  PRIMARY KEY (content_kind,content_id)
 );
--- topic_id 故意不引用 topics：删帖不能使相同已获得的审核进度被重复计算/倒扣。
+CREATE INDEX idx_account_contribution_credits_owner ON account_contribution_credits(account_id);
+-- topic/reply 的 ID 可能相同，必须连同 content_kind 去重，不能只 UNIQUE(content_id)。
+-- content_id 故意不引用内容表：删帖不倒扣信用；每账号最多三条由同一 CAS 事务保证。
 
 CREATE TABLE account_rate_limits (
   key TEXT PRIMARY KEY NOT NULL,
@@ -213,9 +208,9 @@ D1 `batch()` 对一组语句提供事务回滚，但 **UPDATE 影响 0 行不等
 
 - 注册：一次 batch 插入账号、controls、恢复码摘要及初始会话（须在事务中仍满足 initialized/registrationOpen）；用户名冲突整批回滚，绝不出现无密码资料/孤儿会话。响应丢失时用户可正常密码登录，重新生成恢复码；不能重新读取旧码明文。
 - 登录与改密竞争：凭据校验后的会话 INSERT 同时校验账号密码快照/epoch/status；竞争失败不发 Cookie。管理员封禁/强制下线后，之前已开始的登录也不能重新生成有效旧会话。
-- 审核通过与计数：针对本地作者主题帖的 pending→approved 版本变更、去重 credit（最多三行）在同一受条件保护 batch；重复审批、并发审批或删除/恢复均不能重复记功。不得通过先批帖、后补计数造成一半完成。
+- 审核通过与计数：针对本地作者主题或回复的 pending→approved 版本变更、按 (content_kind, content_id) 去重 credit（每账号最多三行）在同一受条件保护 batch；重复审批、并发审批或删除/恢复均不能重复记功。不得通过先批帖、后补计数造成一半完成。
 - 每次新帖子/回复：在同一账号条件写事务中重新检查封禁/审核模式/已批准 credit，再写审核状态，不相信页面缓存或提交的 pending/authorKind。现有帖子 ID 幂等语义保留，重复请求不追加 credit。
-- 改密、恢复、绑定/解绑、注销：凭据/nonce 消费、epoch、会话撤销、绑定和账号变更分别形成单个受条件保护 batch。nonce 并发消费仅一条成功；旧的 `can_edit` 不作为写授权。
+- 改密、恢复、注销：凭据/恢复或重置码消费、epoch、会话撤销和账号变更分别形成单个受条件保护 batch。一次性码并发消费仅一条成功；旧的 `can_edit` 不作为写授权。
 
 不得修改既有章节正文事务与 taxonomy 的 schema、revision、writeToken；账号控制字段是新表内独立的并发控制。
 
@@ -223,12 +218,11 @@ D1 `batch()` 对一组语句提供事务回滚，但 **UPDATE 影响 0 行不等
 
 生产回退首选**代码回退且保留新表**，不是执行 Down，不恢复一份旧全库覆盖现有帖子。已有账号后的生产数据库不得 DROP 新表。数据保持在当前 D1，恢复新版时仍能使用。
 
-下面是结构撤销 SQL，仅适用于尚未开放注册、所有 7 张新表均为 0 行、没有 `account:` 作者记录、已停用账号写入并核对备份的环境。执行器必须在执行前验证这些条件；不满足就拒绝。需要与迁移记录同步撤销，不能仅 DROP 后留下“0002 已应用”。已经有账号时，物理撤销会丢数据，**不提供作为普通生产回退步骤**。
+下面是结构撤销 SQL，仅适用于尚未开放注册、所有 6 张新表均为 0 行、没有 `account:` 作者记录、已停用账号写入并核对备份的环境。执行器必须在执行前验证这些条件；不满足就拒绝。需要与迁移记录同步撤销，不能仅 DROP 后留下“0002 已应用”。已经有账号时，物理撤销会丢数据，**不提供作为普通生产回退步骤**。
 
 ```sql
 DROP TABLE account_challenges;
-DROP TABLE account_topic_credits;
-DROP TABLE account_chatgpt_links;
+DROP TABLE account_contribution_credits;
 DROP TABLE account_sessions;
 DROP TABLE account_controls;
 DROP TABLE account_rate_limits;
@@ -238,70 +232,66 @@ DELETE FROM settings WHERE key='accounts_v1_config';
 
 迁移本身只新增结构/关闭开关，不更新任何已有章节、媒体或讨论行。注册等功能上线后，只有明确的用户操作/管理员操作会改变相应账号和讨论作者资料；下面列明注销影响。
 
-## 5. 身份识别、绑定与帖子归属
+## 5. 一期身份识别与帖子归属
 
 ### 5.1 服务端身份模型
 
-`identity()` 保留兼容的 `{id,name,admin}` 对外形状，内部增加分离的 `chatgptSubject`、`localAccount`、`actorKind`、`ownedAuthorIds`、审核/封禁状态。`/api/me` 只返回 UI 需要的摘要，不返回 session 摘要、绑定 subject 列表、恢复摘要、限流键或密码字段。管理权限只由 §3.1 计算；`ownedAuthorIds` 只管自己的普通发言，不能用于后台权限。
+`identity()` 保留兼容的 `{id,name,admin}` 对外形状，内部明确 `chatgptSubject`、`localAccount`、`actorKind`、`ownedAuthorIds`、审核/封禁状态。一期两种身份独立，不查绑定表、不做账号合并。`/api/me` 只返回 UI 需要的来源摘要，不返回 session 摘要、恢复摘要、限流键或密码字段。管理权限只按 §3.1 计算，所有权集合不能用于后台授权。
 
 | 本次可信平台身份 | 本站会话 | 生效身份和权限 |
 | --- | --- | --- |
-| 无 | 无/过期/伪造 | 游客；伪造会话不获得写/编辑权；受保护接口 401 |
-| 无 | 有效 A | 本站账号 A，`admin=false`；即使 A 绑定 owner 也一样 |
-| 普通 ChatGPT B | 无，且 B 未绑定 | 保持原 ChatGPT 成员，原帖子归属与直接发言不变 |
-| 普通 ChatGPT B | B 已绑定 A（可无本站 Cookie） | 以关联账号 A 的论坛身份/审核/封禁策略工作；不额外造密码会话 |
-| owner ChatGPT | 任意 | 本次具备管理员权限，来源标明 ChatGPT；本地账号从未获得该角色 |
-| 普通 B | 同时有未与 B 绑定的 A 会话 | 普通论坛行为优先 B；显示身份冲突，不自动合并；账号敏感操作返回 409，要求明确退出一种身份或进入绑定流程 |
+| 无 | 无/过期/伪造 | 公开阅读为游客；伪造 Cookie 写请求拒绝，受保护接口 401 |
+| 无 | 有效 A | 本站账号 A，`admin=false`，按账号审核/封禁策略发言 |
+| 普通 ChatGPT B | 无本站会话 | 原 ChatGPT 成员 B，原帖子归属与直接发言行为保持 |
+| 普通 ChatGPT B | 有效 A | 论坛按既有 ChatGPT B 身份工作；界面明确显示当前发言来源，不合并 A、B 的所有权 |
+| owner ChatGPT | 任意 | 本次具备管理员权限，来源明确为当前 ChatGPT；本地账号不因此成为管理员 |
 
-模块可用时，已绑定的普通平台用户必须查询同一账号状态，不能在绑定仍存在时通过切换登录入口绕过本地封禁或强制审核。封禁账号仍可只读公开页面；账号安全页可显示封禁说明，允许经密码复核后的退出/注销，不允许发言或自行解绑绕过封禁。owner 本次平台后台身份不受本地账号封禁影响，owner 可解除错误封禁。
+同时有两种身份时，普通论坛延续 ChatGPT 优先；独立的 `/api/account/*` 只依据有效本站会话管理 A 的账号资料及 A 的私有发言，不能用 ChatGPT 证明替代密码会话。UI 明确区分“论坛当前使用 ChatGPT”与“本站账号 A”；希望以本站账号发言时先走原 ChatGPT 退出流程。使用账号页不会自动把平台帖子转为本站帖子，也不会改变 admin 公式。即使某人分别拥有两种身份，一期也无法把其关联为一个封禁主体。
 
-身份只在请求内缓存，服务端所有权辅助函数统一校验。若声明账号模块 ready 却读不到表/控制行，应返回账号功能 503、阻止论坛写入，不能静默降级为“未绑定 ChatGPT 直接发布”。公开阅读与可信 owner 的修复入口尽量保留，不能给失败状态授权。
+身份只在请求内缓存；本站会话每请求检查 epoch/status。若账号模块 ready 却读不到表/控制行，该账号功能返回 503，携带本站身份的账号写请求失败关闭，不能静默降为游客或绕过本站审核。公开阅读与可信 owner 的修复入口保留；原 ChatGPT 独立路径不假装具备未实现的绑定状态。未初始化与真正旧库的兼容见 §10.2。
 
-### 5.2 绑定/解绑流程
+### 5.2 历史帖子和新帖子
 
-绑定须同时证明两个身份：当前有效本站会话、再次验证本站密码、当前 Sites 认证的 ChatGPT 身份，以及一次性绑定 nonce。如尚未登录ChatGPT，先走既有平台登录链接返回账号页；随后同源 POST start 建立10分钟nonce，服务端同时固定当前本站session与本次可信ChatGPT subject到challenge.link_chatgpt_id。页面显示这个快照对应的待绑定身份，让用户确认后以密码+nonce提交confirm。确认时必须重新读取平台头，且其subject与challenge快照完全一致；另一标签切换ChatGPT身份后须409重新确认，不能误绑新身份。nonce仅留页面内存，刷新重新发起，不能进URL/localStorage。ChatGPT ID不从请求体采信；绑定start/confirm是身份冲突场景下的精确例外，两份证明都必须分别验证，不能沿用冲突状态下的普通账号操作。
+- 原 ChatGPT 帖子保留原始 author_id，仅原平台身份继续管理。本站密码登录不获得任何 ChatGPT 历史帖子所有权。
+- 本站新发言用 `account:<A.id>`、`author_kind='account'`、服务器昵称；ChatGPT 新发言仍用原 ID 和 member 种类。所有权集合一次仅取当前主体对应的作者 ID，不合并两者。
+- `/api/account/posts` 仅查询当前本站会话 A 的 `account:<A.id>`；即使同时带平台身份也不扩展到 ChatGPT 帖子。普通论坛所有权检查依据当前论坛 actor；管理员动作另过 admin gate。
+- **一期不认领游客内容**。注册前的 guest 待审内容仍属 guest；不按昵称、IP、提交 ID、localStorage 或签名 guest Cookie 认领，`lib/guests.ts` 保持不变。未来认领需另行设计。
 
-冲突（一方已绑定其他身份）返回 409，绝不覆盖。客户端提供的邮箱、昵称、用户名、returnTo 都不能用于自动关联。数据库两个唯一约束和事务防止并发抢绑。绑定完成后撤销旧本站会话、生成新会话，删除 nonce；不写 owner、不改原 ChatGPT 帖子的 author_id。
+### 5.3 前三条发言审核的已定口径
 
-解绑需当前本站账号证明、密码复核与同源 POST；成功撤销本站会话并删除绑定。若只通过 ChatGPT 登录且无本站会话，先用密码完成本站登录；无有效密码走恢复。封禁时不允许自行解绑。本站账号密码仍可独立登录，不会因解绑失去全部登录方式。退出 ChatGPT 平台不是解绑，解绑也不是退出平台。
+**主题和回复都计数，累计 3 条不同发言审核通过后转为自动发布。** `account_contribution_credits` 以 `(content_kind, content_id)` 唯一；主题 `x` 与回复 `x` 是两条内容，不应碰撞。只在 pending→approved 的审核事务中为该账号记功，最多三条；同一内容重复审批、请求重放、修改后再次批准均不能重复累计。被拒绝的不计；已获信用的内容后来删除不倒扣，也不能通过删除/恢复反复加分。
 
-### 5.3 历史帖子和新帖子
+未满三条时，所有新主题/回复待审；提前提交的第 4 条仍待审。达到三条只影响之后提交的新内容，既有待审队列不自动公开。批准主题、批准回复和新发言必须在同一账号 CAS 规则下串行判断，防止并发丢计数或提前放行；回复仍保留原主题可见性/锁定检查。
 
-- 原 ChatGPT 帖子保留原始 author_id，不批量转移。未绑定时仍由相同平台身份管理。
-- 绑定后本站账号的普通发言所有权集合为 `account:<A.id>` 加当前已验证绑定的 ChatGPT ID；因此用密码可管理已经明确绑定身份的普通历史帖子，但**不得置顶、锁定、隐藏、审核或编辑教程**。解绑后不再通过密码拥有 ChatGPT 历史帖子；平台用户仍可管理它们。
-- 本站账号及其绑定平台入口的新发言统一写 `account:<A.id>`、`author_kind='account'`、服务器昵称，避免来源切换后割裂。未绑定 ChatGPT 新发言继续原 ID、member 种类。owner 的后台行为仍依据当前平台权源。
-- 新账号不会因绑定一个旧 ChatGPT 身份自动拿到审核信用，历史 ChatGPT 主题帖不补记前三帖进度。
-- **首版不认领游客内容**。注册后原游客待审内容仍属 guest，不按昵称、IP、提交 ID 或 localStorage 认领；也不把签名 guest Cookie 升级为编辑凭证。这样 `lib/guests.ts` 可保持原样。未来认领需独立设计并审批。
+`review_mode='manual'` 始终待审；auto 才按三条门槛。封禁禁止本站账号发帖/编辑。本站账号编辑公开内容时重新按当前审核策略判定，尚未达标或强制审核阶段改文回 pending，版本检查防止旧页面绕过；已计过 credit 的内容不重复记功。独立 ChatGPT 成员原行为、游客待审行为均保留。
 
-### 5.4 前三帖规则的明确口径
+### 5.4 注销与自己的待审内容
 
-提案将“前三帖”定义为 **3 篇不同主题帖经管理员审核通过**，回复与主题共用审核状态但回复不计入三篇。未达到 3 个 credit 时，所有新主题/回复均 pending；第 4 篇若在前三篇审核通过前提交，也保持 pending，不能通过连续发四篇绕过。达到门槛只影响之后的新发言，原待审队列不自动公开。被拒绝的帖不记功；用户删掉已批准帖不倒扣信用；重复请求/重复批准不累计。
+私有“我的发言”只取当前本站账号所有权，可见自己的公开/待审内容，分页且 no-store；公开列表、计数、详情和搜索仍不泄露待审内容。注销前可自行删自己的主题/回复；删除主题会级联删除其所有回复，确认框明确包括他人回复的既有影响，不静默改为软删除。
 
-`review_mode='manual'` 始终待审，auto 才按三篇门槛；封禁禁止发言与编辑。管理员可以把账号改回 manual，不能在账号表加 admin 角色。本站账号编辑已批准发言时重新按当前审核策略判定；仍在试用/强制审核阶段的改文回 pending，版本检查防止用旧页面绕过。普通未绑定 ChatGPT 成员的原行为保留。
+注销需当前本站会话、再次输入密码、同源请求和明确确认，不接受仅凭恢复码直接删除。范围严格是该账号的 `account:<id>` 主题/回复；**不触及任何独立 ChatGPT 历史或新发言**，即使同一浏览器同时登录 ChatGPT。
 
-这是对作者规则的防绕过落地口径，需在审核中确认“帖是否只计主题、是否以审核通过为门槛”，本批不擅自实现另一种含义。
+在一个受条件保护的 D1 batch 中，将范围内 topics/replies 的 author_name 实际写为“已注销用户”，author_id 改为每条独立的 `deleted:<随机UUID>`，author_kind='deleted'，version +1；保留内容 ID、正文、创建时间和锁定/隐藏/审核状态。随后删除账号及从属 controls、sessions、challenges、credits。在线库不保留原昵称、username 墓碑或作者映射；短期限流 HMAC 按最长 24 小时到期。唯一允许的私有恢复防复活记录，是 §10.3 的随机账号 ID 与注销时间清单，不含用户名、哈希、ChatGPT ID。正文主动写入的个人资料由用户注销前编辑/删除，系统不猜测改写。
 
-### 5.5 注销与自己的待审内容
+发帖、改密和注销共用 controls revision/token 防并发，不能留下注销后的旧作者新帖。相同用户名可重注册，但产生全新 ID，不能认领匿名帖子；不删除 settings.owner_user_id 或平台账号。纯 ChatGPT 用户未注册本站时不显示注销本站账号操作。
 
-新增私有“我的发言”：只从服务端所有权集合取记录，可看到自己的待审/公开内容，响应 no-store；公开列表、计数、详情和搜索仍不泄漏待审内容。用户可在注销前删除自己的主题/回复。现有删除主题会级联删除其所有回复，确认框须明确包括他人回复的影响；本批方案保留该既有语义，不静默改为软删除。
+**封禁范围是当前本站账号，不是永久封人。** 注销后重新注册从零审核；ChatGPT 入口和游客身份本就独立。不能暗中新增永久身份黑名单或假装可跨入口识别同一人。
 
-注销需重新输入密码、同源请求、明确确认，不接受仅凭恢复码直接删除。以注销事务提交时的有效所有权集合为范围：本站 `account:` 帖子，以及**当前仍绑定**的 ChatGPT 历史帖子，一并匿名化。界面显示两类数量，说明若希望保留独立 ChatGPT 历史归属，应先解绑；已解绑的历史平台帖子不在此次范围。此范围选择列入作者审核项。
+### 5.5 第二期绑定的保留边界（本期不实施）
 
-在一个受条件保护的 D1 batch 中，将范围内 topics/replies 的 `author_name` 实际写为“已注销用户”，`author_id` 改成每条独立的 `deleted:<随机UUID>`，`author_kind='deleted'`，version +1；保留帖子 ID、正文、创建时间、锁定/隐藏/审核状态。不仅在渲染层换名字。随后删除账号及所有从属 controls、sessions、links、challenges、credits。不能保留旧 ID 到匿名 ID 的映射、原昵称或 username 墓碑；短期限流 HMAC 无账号 FK，仍按最长 24 小时自动到期。已有正文若自行包含个人资料，注销前由用户编辑/删除，系统不猜测并改写正文。
+可选绑定/解绑留待二期专门设计；至少需本站会话和密码复核、当前可信 ChatGPT 身份、一次性挑战、双方唯一约束和并发控制。届时另审表结构、归属转换、注销范围与封禁策略，不能沿用未确认的旧草案。无论怎样绑定，只有**本次**可信 owner ChatGPT 才能管理站点，密码 Cookie 绝不继承 admin。
 
-并发发帖/绑解绑/改密与注销按同一 controls revision/token 串行判定，不能留下注销后的实名新帖。用户名可被重新注册，但新 ID 全新，永远不能认领匿名帖子。删除本地 owner 绑定账号不删除 `owner_user_id`，也不删除其 ChatGPT 平台账号。纯 ChatGPT 登录且从未注册本站账号者不显示“注销本站账号”。
-
-**封禁范围是当前账号，不是永久封人。** 注销删除绑定与账号资料后，同一ChatGPT可能重新成为独立平台成员，也可能重新注册新账号；新注册仍从零审核。退出身份后也无法靠不收集个人信息的系统永久识别访客。保留游客待审与现有限流，不暗中保留永久ChatGPT黑名单来违背删除数据承诺。如果作者希望注销后仍永久封禁原平台身份，须另审数据保留规则，不能把它作为已实现保证。
+一期 SQL、接口、测试验收和逐文件实施清单均不含绑定功能；不提前建空绑定表，不放空接口或占位身份分支。
 
 ## 6. 恢复码与管理员重置
 
 注册成功生成 32 字节随机恢复码，只显示一次，页面明确让用户离线保存；只保存带用途域分隔的 SHA-256 摘要。只在 HTTPS POST 响应正文返回一次，no-store，不进 URL、localStorage、日志或埋点。账号页只查“已设置/需重新生成”及生成时间，不能再展示旧码。更换恢复码需密码复核，生成后旧码立即失效。
 
-恢复页输入用户名、恢复码、新密码和确认密码；同样实施 IP/用户名限流。一个事务原子消费有效码、写新随机盐密码哈希、撤销全部会话与其他重置/绑定挑战、生成新恢复码摘要；成功后显示新恢复码一次，要求重新密码登录。并发消费只有一个成功，失败统一“不正确或已失效”；无自动管理员或平台身份。密码改变/管理员重置采用相同撤销规则。
+恢复页输入用户名、恢复码、新密码和确认密码；同样实施 IP/用户名限流。一个事务原子消费有效码、写新随机盐密码哈希、撤销全部会话与其他重置挑战、生成新恢复码摘要；成功后显示新恢复码一次，要求重新密码登录。并发消费只有一个成功，失败统一“不正确或已失效”；无自动管理员或平台身份。密码改变/管理员重置采用相同撤销规则。
 
-后台“生成一次性重置码”只允许当前 owner ChatGPT，生成 32 随机字节、15 分钟有效、只显示一次；每次重新生成废弃此前 reset 码。仅生成 reset 码不改变用户密码，消费时才撤销会话并替换密码。它只能用于设置新密码，不能直接登录、解绑、解除封禁或授予任何权限。封禁账号重置密码后仍然封禁。
+后台“生成一次性重置码”只允许当前 owner ChatGPT，生成 32 随机字节、15 分钟有效、只显示一次；每次重新生成废弃此前 reset 码。仅生成 reset 码不改变用户密码，消费时才撤销会话并替换密码。它只能用于设置新密码，不能直接登录、解除封禁或授予任何权限。封禁账号重置密码后仍然封禁。
 
-不收联系方式意味着：**丢失密码和恢复码时，无法仅靠用户名安全找回。** 管理员发码前须通过已有有效会话、当前认证的已绑定 ChatGPT，或可靠的既有线下关系核验；不能以公开发帖截图、知道昵称、留言声称“我是本人”作为证明。无法核验时不发码，也不承诺必定找回。管理员把码通过已有私下渠道交给本人，不在论坛公开、不新增收集邮箱/证件；应用不自动发送消息。人工核验标准须作者确认。[S8]
+不收联系方式意味着：**丢失密码和恢复码时，无法仅靠用户名安全找回。** 作者已确定人工核验只接受两种情况：用户仍能登录该本站账号（核验当前有效本站会话），或作者线下认识本人；不能以公开发帖截图、知道昵称、留言声称“我是本人”作为证明。无法核验时不发码，也不承诺必定找回。管理员把码通过已有私下渠道交给本人，不在论坛公开、不新增收集邮箱/证件；应用不自动发送消息。不得把 ChatGPT 身份、邮件、公开截图或其他未批准证据当作替代条件。[S8]
 
 ## 7. 页面与接口
 
@@ -310,9 +300,9 @@ DELETE FROM settings WHERE key='accounts_v1_config';
 | 页面 | 内容/交互 |
 | --- | --- |
 | `/register` | 用户名、昵称、密码/确认；不需要 ChatGPT；提示前三帖审核与恢复码；成功一次显示恢复码 |
-| `/login` | 用户名+密码为直接入口，另有原“使用 ChatGPT 登录”；恢复入口、明确的身份冲突/退出提示 |
+| `/login` | 用户名+密码为直接入口，另有原“使用 ChatGPT 登录”；恢复入口、明确的当前身份来源/退出提示 |
 | `/account/recover` | 恢复码或管理员一次性重置码 + 新密码；通用失败提示，不显示账号是否存在 |
-| `/account` | 当前登录来源、昵称修改、密码修改、恢复码状态/重生成、绑定/解绑、我的发言、退出、注销；封禁状态说明 |
+| `/account` | 当前登录来源、昵称修改、密码修改、恢复码状态/重生成、我的发言、退出、注销；封禁状态说明 |
 | `/admin` 内“账号”页签 | 分页账号列表、注册时间/状态、审核进度、强制审核/解除强制、封禁/解封、生成重置码、强制下线；不显示密码/恢复摘要 |
 
 沿用妙妙屋纸面、方块边框和材质导航；像素字体仅标题/导航/标签，账号表单与帖子正文使用系统字体。输入带 label、autocomplete（username/current-password/new-password）、清晰错误/焦点；提交防重复，但后端仍独立校验。密码与恢复码不出现在可分享预览或截图演示中。
@@ -328,9 +318,8 @@ DELETE FROM settings WHERE key='accounts_v1_config';
 | GET `/api/account` | 当前账号摘要，不返回秘密、原始平台 subject；未注册账号返回相应提示 |
 | PUT `/api/account/profile` | 只允许 nickname；拒绝 username/role/admin/status 注入 |
 | POST `/api/account/password`、`/recovery` | 当前账号+密码复核；改密/重新生成恢复码 |
-| POST `/api/account/chatgpt-link/start`、`/confirm`、`/unlink` | 上述双重证明/一次性 nonce/密码；所有步骤同源写入 |
 | GET `/api/account/posts` | 只读当前账号自己的内容，含待审，分页/no-store |
-| DELETE `/api/account/posts/<kind>/<id>` | 所有权 + 当前密码会话或对应绑定平台主体、版本检查；允许删自己的待审内容 |
+| DELETE `/api/account/posts/<kind>/<id>` | 所有权 + 当前有效本站会话、版本检查；允许删自己的待审内容 |
 | DELETE `/api/account` | 密码复核 + 显式确认 + Origin；原子匿名化/删除 |
 | GET `/api/admin/accounts` | 当前 owner，分页列表/筛选，安全字段投影 |
 | PUT `/api/admin/accounts/<id>` | 当前 owner + expectedRevision；只改审核模式/封禁状态 |
@@ -347,19 +336,19 @@ DELETE 的密码/确认数据只放受长度限制的 JSON body，不放 URL；�
 
 | 文件 | 拟变更与理由 | 边界 |
 | --- | --- | --- |
-| `lib/data.ts` 的 `identity()` | 必改：组合平台/本站/游客，独立计算 admin、读取绑定/账号状态 | 受保护文件；必须先审批；database/seed/章节读取不改 |
+| `lib/data.ts` 的 `identity()` | 必改：组合独立的平台/本站/游客，独立计算 admin、读取本站账号状态；不查绑定 | 作者已授权，但须先完成探针 PR 与结果审核；database/seed/章节读取不改 |
 | `app/chatgpt-auth.ts` | **计划不改**：现有 getChatGPTUser、安全 returnTo 和平台登录/退出已足够 | 不把密码或绑定映射伪装成平台头；若平台兼容要求确需改，再停下说明 |
 | `lib/guests.ts` | **计划不改**：首版不认领游客，不改 HMAC/Cookie/游客限流 | 新账号认证与限流用独立模块；不扩大游客权限 |
 | `app/api/[...path]/route.ts` | 必改：精确匿名 auth 名单、账号/管理接口、分离 actorKind/pending、统一所有权、私有待审删除、审核credit事务 | 受保护权限分派；Origin/admin gate 不弱化；只修改获批的身份/账号相关逻辑 |
 | `lib/account-passwords.ts`（新增） | PBKDF2 参数格式/随机盐/验证；恢复令牌摘要与域分隔 | server-only；无 Node 密码库或新依赖 |
 | `lib/account-sessions.ts`（新增） | 不透明会话、Cookie、epoch、撤销、当前请求主体 | 不缓存 admin，不造 ChatGPT 登录 |
 | `lib/account-rate-limit.ts`（新增） | 可信 IP 解析、HMAC 桶、原子预约/失败锁、TTL | 不复用 guest_limits 存账号画像 |
-| `lib/accounts.ts`、`lib/account-ownership.ts`（新增） | 注册/恢复/绑定/注销、账号CAS/审核信用、普通发言归属 | 参数化 SQL；不用于替代 admin gate |
-| `db/schema.ts` | 添加上述 7 表/索引 | 既有表定义保持 |
-| `drizzle/0002_accounts.sql` 与 `drizzle/meta/` 新快照/日志 | 经审核后生成新增迁移 | 本批仅正文展示 SQL，不创建迁移、不执行生产写入 |
+| `lib/accounts.ts`、`lib/account-ownership.ts`（新增） | 注册/恢复/注销、账号CAS/主题及回复审核信用、普通发言归属 | 参数化 SQL；不用于替代 admin gate |
+| `db/schema.ts` | 添加上述 6 表/索引 | 既有表定义保持 |
+| `drizzle/0002_accounts.sql` 与 `drizzle/meta/` 新快照/日志 | 作者已授权 0002；探针完成并经审核后才生成迁移 | 本批仅正文展示 SQL，不创建迁移、不执行生产写入 |
 | `app/register/page.tsx`、`app/login/page.tsx`、`app/account/page.tsx`、`app/account/recover/page.tsx`、对应表单组件/CSS（新增） | 登录、注册和账号管理 | 与原内容编辑器分离；无外链字体/依赖 |
 | `app/shared.tsx`、`app/site-shell.tsx` | 登录入口/账户菜单、来源和退出方式 | 保留原 ChatGPT 登录入口及后台链接 |
-| `app/session-store.ts`、`app/session-user.tsx` | 账号摘要/登录来源；登录、退出、绑定、改密后刷新同一 store 代际 | 不额外重复请求 me；晚响应、BFCache隔离保留 |
+| `app/session-store.ts`、`app/session-user.tsx` | 账号摘要/登录来源；登录、退出、改密后刷新同一 store 代际 | 不额外重复请求 me；晚响应、BFCache隔离保留 |
 | `app/community/forum.tsx`、`app/community/topic.tsx` | 服务端昵称、账号审核提示、“我的发言”链接 | 不扩展本批无关的 Markdown/分类功能；权限由服务端执行 |
 | `app/admin/panel.tsx`、`app/admin/accounts-panel.tsx`（新增） | 账号管理页签、列表与动作 | 块编辑器、草稿发布、图库和分类交互不改 |
 | `tests/accounts.ts`、`tests/account-migrations.ts`（新增）、`tests/run.mjs` | 身份/密码/会话/CSRF/审核/注销/迁移回退行为测试 | 不删除现有权限/旧图/分类/编辑器断言 |
@@ -374,70 +363,87 @@ DELETE 的密码/确认数据只放受长度限制的 JSON body，不放 URL；�
 
 | 类别 | 必须覆盖的行为 |
 | --- | --- |
-| admin 隔离 | 对 chapters、taxonomy、media、reader-preview、export、review、topics、accounts 及未知 `/api/admin/*`，逐一用有效普通账号调用各方法，必须 403；本地绑定 owner 但无 owner 本次平台头也全部 403；没有 cookie 401；本次 owner 平台头才可通过；客户端 role/admin/owner 参数无效 |
+| admin 隔离 | 对 chapters、taxonomy、media、reader-preview、export、review、topics、accounts 及未知 `/api/admin/*`，逐一用有效普通账号调用各方法，必须 403；即使该账号由 owner 本人注册，无本次 owner 平台头也全部 403；没有 cookie 401；本次 owner 平台头才可通过；客户端 role/admin/owner 参数无效 |
 | 平台信任 | 普通外部请求自行构造 oai 头不能经 Sites 获得管理员；应用源码只在受信平台运行；header去除/注入契约未经验证不得宣称防伪完成 |
-| 凭据 | 同密码不同盐、正确/错误/未知用户、随机盐长度、记录参数校验、长Unicode边界、不trim；日志/错误/URL/普通导出不含密码；恢复码仅允许在规定的一次性成功响应中出现；实际 Sites 支持参数与耗时 |
+| 凭据 | 同密码不同盐、正确/错误/未知用户、随机盐长度、记录参数校验、10/128码点与512B边界、长Unicode、不trim；日志/错误/URL/普通导出不含密码；恢复码仅允许在规定的一次性成功响应中出现；实际 Sites 支持参数与耗时 |
 | 会话 | 随机伪造、篡改、重复同名Cookie、过长值、过期/闲置、已撤销、账号不存在、epoch落后均拒绝；logout/强制下线/改密后立即失效；与并发登录竞争不可复活；Cookie无Domain且属性完整 |
 | CSRF | 每个写入口的同源成功/跨域、缺失Origin、null、多值、假端口、假子域、伪造forwarded头拒绝；不使用 GET 做账号业务写入；匿名auth白名单不接受其他方法和路径 |
 | 限流 | 同IP换用户名、同用户名换IP均受限；未知用户名也计数；并发/多实例准确；跨计数窗口锁期不提前结束；恢复桶隔离；过期清理；IP头不可验证/缺少secret时失败关闭 |
-| 名称/绑定 | NFKC/大小写并发唯一；保留词、零宽/双向字符、伪造authorName拒绝；需两个身份+密码+nonce，重放/过期/错session/抢绑409；不同主体不自动合并；绑定owner密码模式无管理权；确认页后切换平台身份返回409 |
-| 审核 | 前3个不同已批主题门槛、回复不加分、四帖并发仍pending、重复请求/审批不加分、manual优先、封禁换ChatGPT入口不可绕过；旧ChatGPT直接发布/游客待审仍在 |
-| 隐私/归属 | 旧ChatGPT帖子ID与归属不变；绑定/解绑后的can_edit集合；游客内容不认领；自己的待审仅私有API可见，公开列表/搜索/计数/URL仍不可见 |
-| 恢复 | 一次显示/一次消费、并发只有一条成功、旧码失效、15分钟过期、生成新reset废弃旧码；重置不解封、不升权；无法证明归属不发码 |
-| 注销 | 全部相关作者字段落库匿名化；账号/盐哈希/会话/绑定/挑战/credit删除；正文与审核状态保留；并发发帖不留旧作者；同用户名重注册不能认领；封禁后旧Cookie失效，正确密码受限登录仍能注销，不能论坛写/绑解绑/后台；注销前删自己的待审内容，不能删他人 |
+| 名称/独立身份 | NFKC/大小写并发唯一；保留词、零宽/双向字符、伪造authorName拒绝；同时有 ChatGPT 与本站会话时论坛来源确定、所有权不合并；一期不存在绑定接口或 SQL 查询；普通账号不能通过同名 owner 升权 |
+| 审核 | 主题和回复合计3条获批；同ID不同kind分别计数、同kind同ID重复不计；拒绝不计、满3条后credit饱和；提前第4条仍pending，批准第三条不自动发布队列；并发主题/回复审批无丢计数/提前放行；manual优先、本站封禁拒绝写；独立ChatGPT直接发布/游客待审保留 |
+| 隐私/归属 | 旧ChatGPT帖子ID与归属不变；本站/ChatGPT双会话的独立can_edit集合；游客内容不认领；自己的待审仅私有API可见，公开列表/搜索/计数/URL仍不可见 |
+| 恢复 | 一次显示/一次消费、并发只有一条成功、旧码失效、15分钟过期、生成新reset废弃旧码；重置不解封、不升权；人工核验仅当前有效本站登录或作者线下熟人，其他情况不发码 |
+| 注销 | 全部相关作者字段落库匿名化；账号/盐哈希/会话/挑战/credit删除；独立ChatGPT帖子不改；正文与审核状态保留；并发发帖不留旧作者；同用户名重注册不能认领；封禁后旧Cookie失效，正确密码受限登录仍能注销，不能论坛写/后台；注销前删自己的待审内容，不能删他人 |
 | 数据库 | Up在旧库成功且旧表逐字段不变；重复/半成品迁移不重置；FK/唯一/CHECK；冲突409无部分写入；Down只限空表；大量帖子注销的D1语句数/耗时与响应超时演练 |
-| v19 回退 | 带新表/新帖子/匿名作者的库交给v19，章节/游客/原平台功能可用，账号入口不可用但数据仍在；v19再产生内容后重升新版数据仍完整；明确测试v19无法执行新封禁策略的边界 |
-| 原有回归 | 原权限、后台编辑、草稿/预览/发布、媒体、数据导出、旧图过滤、taxonomy CAS和七章链接全部保留；关闭注册后已绑定身份仍执行封禁/审核，删配置/错误initialized不能降级；完整 `node tests/run.mjs` 与 `pnpm build` |
+| v19 回退 | 带新表/新帖子/匿名作者的库交给v19，章节/游客/原平台功能可用，账号入口不可用但数据仍在；v19再产生内容后重升新版数据仍完整；确认v19不消费本站会话、不把本站帖子错认成ChatGPT所有 |
+| 原有回归 | 原权限、后台编辑、草稿/预览/发布、媒体、数据导出、旧图过滤、taxonomy CAS和七章链接全部保留；关闭注册后已有本站身份仍执行封禁/审核，删配置/错误initialized不能降级；完整 `node tests/run.mjs` 与 `pnpm build` |
 
 注销若超出单 batch 的平台资源上限，不能改成“先删账号再慢慢匿名化”；应保持账号不变并返回可重试错误，另提审可恢复的分阶段协议。不在未测得上限时承诺无限帖子账号都可单次注销。
 
-## 10. 发布、备份与回退
+## 10. 平台探针、发布、备份与回退
 
-### 10.1 分阶段上线
+### 10.1 平台探针必须先行
 
-1. 审核本文，明确 §11 的风险/口径以及受保护文件、表结构变更；只批准方案不自动授权发布。
-2. 实施 PR A：新增结构、兼容读取和独立注册开关，默认尚未初始化。无配置且新表全部不存在的真正旧库仍提供原ChatGPT/游客/内容；账号页面提示暂未开放，账号写接口503，不在identity临时创建表。缺少配置时核对schema，若新表已存在则不得当旧库降级；initialized=false但已有账号同样失败关闭并交owner修复。initialized=true但表异常时按§5.1处理。运营期 registrationOpen=false 仅拒绝新注册，不改变已有用户权限判定。
-3. **迁移前完整备份并验证可恢复**。先在与线上隔离的库演练 Up、原数据逐字段比较、代码回退、再升级。不得用线上初始化或测试账号探测权限。
-4. 使用平台正式迁移途径应用 0002，读核验表/索引/外键/迁移登记；运行条件达标后以服务器侧受控操作设置 initialized，再单独开放 registrationOpen。不把开关/参数藏在公开注册接口。
-5. 实施 PR B：账号接口/页面、绑定、恢复、管理与审核。待已审测试和 Sites 实际运行条件确认后才开启注册；本轮不能用 v19 样式性能免测决定免除新身份系统的权限/密码测试。
-6. 保存新 Sites 版本，作者另行同意后发布。记录版本、Git提交、迁移号、备份时间与回退入口；不预编不存在的版本号。账号上线之前仍保持现网 v19。
+当前只推进平台探针 PR，完成后停下等作者和 Claude 审核；未有结果前不写账号业务代码、不建六表、不添加 0002。探针使用**仅当前 owner 可访问的只读诊断接口**，不依赖新增账号身份，不改 `app/chatgpt-auth.ts`、`lib/guests.ts`；不得调用 `ensureSeed()`、owner 初始化、session touch 或其他隐式写入。若 owner 尚未存在，拒绝并报告，不现场创建 owner。
 
-### 10.2 备份边界
+| 检测项 | 只读检测与输出边界 | 什么不算证据 |
+| --- | --- | --- |
+| 可信访客 IP | 仅返回有/无及来源头名；不返回、记录或保存 IP 原文 | 仅发现某个 header 存在不能证明可信，须核实 Sites 转发边界，未核实报告未知 |
+| 伪造平台头 | 对本站受控外部请求使用明确的非真实测试标记；观察 Sites 是否剥离/替换 `oai-authenticated-user-*`；报告剥离/保留/无法验证，绝不回显真实身份 | 普通匿名 401 只能证明未授权，不能单独证明所有头已剥离；不伪造 owner ID 来取得后台权限 |
+| PBKDF2 | 固定非真实测试口令+随机盐，对 600,000 和 100,000 分别执行并报告计时结果或脱敏错误；标注 Workers 时钟限制，不保存派生结果 | 本地 Node 成功不是 Sites 成功；无 I/O 时计时 0 ms 不是耗时证明；浏览器 RTT 另列并注明包含网络/鉴权/D1 |
+| 完整 D1 导出 | 只读核对是否可取得含结构、全部表/行和迁移记录的完整备份及可用恢复路径；输出能力状态/缺口，数据只进入私有位置 | 现有内容 JSON 不等于完整 D1；平台理论支持不等于作者具有导出权限 |
 
-旧后台 JSON 是内容备份，继续不混入密码哈希/恢复摘要/session。账号上线前必须落实私有完整 D1 导出/恢复通道（含 7 张新表、settings、原内容和迁移记录），以及仅作者可访问的备份存储。Sites 是否向当前账号开放完整 D1 导出/Time Travel 操作须在实施时确认；Cloudflare 有该能力不代表此 Sites 项目已有可操作权限。[S9]
+若接口无权独自观察某项（例如 Sites 入口处理或控制台导出权限），返回“无法验证/待平台证据”，不能用猜测的 true 代替。探针结果不包含密码、派生密钥、原始 IP、身份头值或数据库内容；完整导出与公开诊断响应分离。测量不得以绕过 owner 校验、放开匿名诊断、写伪造身份或线上测试账号来换取结果。
 
-如平台无完整导出途径，下一份实施 PR 需先补专门的 owner-only 私有账号备份设计/工具并审核，**不能用现有内容导出替代后直接开放注册**。备份不能进公开GitHub、R2公开图库或普通用户导出；其中即使只有哈希也属于凭据材料。恢复到新部署后清除全部 session/reset/link挑战、递增epoch，保留账号密码/长期恢复码与审核/绑定资料。备份恢复要与正文/迁移版本一致，不能只恢复账号表丢失后续发帖。
+探针部署与运行需要单独审核安排；本轮只开探针 PR，不合并、不发布。结果完成后删除临时接口及专用探针实现，保留脱敏报告；删除也经正常 PR 流程。账号实现前须确认可信 IP、平台头边界、所选 KDF 支持和完整备份路径；未满足时不能开放注册。
 
-注销删除当前在线库的账号数据；历史备份中的旧副本不能保证瞬时消失。提案私有人工备份最长保留30天，平台保留期需实际核实并在注销说明中如实显示。受限备份仅供灾难恢复，不用于账号找回或日常查询。需要单独受限的短期注销清单（只含旧随机账号ID及注销时间，不含用户名/哈希/平台ID），到最后一份相关备份过期后删除；若作者要求连这种短期ID清单也不保留，必须使相关旧备份不可再恢复，而不能同时承诺任意恢复旧库且不复活已注销账号。此政策列入审核项，不在本批创建清单。
+### 10.2 账号分阶段上线（探针之后）
 
-### 10.3 回退到 v19 的准确行为
+1. 按探针结果固定 600,000 或 100,000 次参数，记录实际环境/耗时/错误与备份能力；作者和 Claude 审核后才开始账号代码。
+2. 兼容 PR：新增六表、兼容读取和独立注册开关，默认未初始化。无配置且新表全部不存在的真正旧库继续原 ChatGPT/游客/内容功能；账号页提示暂未开放，账号写接口 503，不在 identity 临时建表。新表已存在但缺配置、initialized=false 却已有账号均失败关闭，交 owner 修复；initialized=true 却表异常按 §5.1 处理。registrationOpen=false 仅停止新注册，不停用已有用户权限检查。
+3. **迁移前完整备份并验证可恢复**。隔离库演练 Up、旧数据逐字段比较、代码回退、再升级；不用线上测试账号探测权限。
+4. 经审核的正式迁移途径应用 0002，核验表/索引/外键/迁移登记；运行条件达标后服务器侧受控设置 initialized。此时仍不开放注册。
+5. 账号实现 PR：一期接口/页面、恢复、后台管理、主题和回复审核、注销。身份/密码/并发/恢复测试通过，完整私有备份路径落实后才另行开放 registrationOpen；不实现绑定，不借此前样式性能免测跳过账号安全测试。
+6. 每个 PR 完成后停下等审核；合并、发布与开启注册分别按作者指令进行。记录实际 Sites 版本、Git 提交、迁移号、备份时间与回退入口，不预编版本号。账号上线前现网继续 v19。
+
+### 10.3 备份边界与已定保留期
+
+旧后台 JSON 仍是内容备份，不混入密码哈希/恢复摘要/session。账号上线前必须落实私有完整 D1 导出与恢复通道（含 **6 张新表**、settings、全部原内容和迁移记录），仅作者可访问。Sites 是否向当前账号提供此能力须由探针及平台权限证据确认；Cloudflare 有导出/Time Travel 不等于本项目拥有权限。[S9]
+
+若无完整导出途径，应另提 owner-only 私有完整备份工具方案并审核；**没有完整备份路径就不开放注册**。备份不进 GitHub、公开 R2 图库、任何公共位置或普通用户导出；哈希也属于凭据材料。恢复到新部署后清除全部 session/reset 挑战、递增 epoch，保留账号密码、未消费长期恢复码及审核进度。恢复应与内容、迁移版本一致，不能只恢复账号表而遗漏后续帖子。
+
+作者已确定：**私有完整备份最多保留 30 天**，到期销毁，平台托管副本实际保留/删除能力也需核实并如实披露。注销删除在线账号数据，但历史备份中的旧副本不能保证即时消失；备份仅供灾难恢复，不能用于日常查询或替用户找回账号。
+
+允许在私有受限位置保留**仅有随机账号 ID 与注销时间**的注销清单，不含用户名、昵称、哈希或平台 ID。恢复备份时先按清单重放注销，避免复活已删除账号；相关最后一份可恢复备份过期后删除清单对应条目。该清单不入 GitHub/公开位置，不作为永久封禁或历史身份映射。此政策已定，不再作为待作者选择事项。
+
+### 10.4 回退到 v19 的准确行为
 
 | 内容 | 回退 v19 后 |
 | --- | --- |
-| 新增账号表/密码/审核资料/绑定 | 保留在同一个 D1，v19 不读取；不得 DROP/清库/恢复旧快照 |
-| 用户名密码登录 | **暂时不能用**；v19无注册/账号路由，旧账号入口返回不存在，cookie被忽略，不导致全站报错 |
-| 已绑定 ChatGPT | 可走v19原平台登录；v19不理解绑定，不通过本地账号映射取得本站帖子编辑权 |
-| 原ChatGPT/游客/管理员 | 恢复v19本来的行为；owner仍由本次平台身份决定 |
-| account作者的公开帖子 | author_name已落库，v19可显示；本站账号暂不能编辑；pending继续不公开 |
-| 已注销账号的帖子 | 已落库为“已注销用户”，v19也显示该名称，不依赖新渲染器 |
-| 新账号封禁/强制审核 | **v19不认识这些规则**；已绑定用户若使用原ChatGPT入口，可恢复v19原成员行为，不能声称新封禁仍有效 |
+| 六表、密码、审核资料 | 留在同一个 D1，v19 不读取；不得 DROP/清库/恢复旧快照 |
+| 用户名密码登录 | **暂时不能用**；v19 无账号路由，入口不存在，本站 Cookie 被忽略；不得使全站报错 |
+| 原 ChatGPT/游客/管理员 | 原功能和归属保持；没有绑定映射，owner 仍只来自本次平台身份 |
+| 本站账号公开帖子 | author_name 已落库，v19 可显示；本站账号暂不能编辑，pending 仍不公开 |
+| 已注销帖子 | 已落库为“已注销用户”，不依赖新渲染器，v19 仍显示正确 |
+| 本站封禁/强制审核 | 资料保留但 v19 不实现本站账号登录或这些账号规则；不会因此把本站账号升级成原平台身份 |
 
-因此 v19 是**数据可保留的紧急代码回退**，不是完整账号安全策略兼容版本。若必须在回退期间继续执行新封禁/审核规则，应采用保留账号服务的修复版本，而非纯v19；不能靠删绑定/删账号来解决。若站点需进入社区只读维护，须先确认平台可用控制方式，不能假装已有v19开关。
+v19 是保留数据的紧急代码回退，账号登录暂不可用。原 ChatGPT 与游客流程继续其原有行为；一期本来就没有将其与本站账号关联，不能借回退宣称跨身份封禁。若需回退期间保留本站登录/账号管理，应使用兼容修复版本而非纯 v19。
 
-再次部署新版时不重复播种账号/覆盖正文，先检查迁移与现有数据，清除旧会话/短期挑战并递增epoch，原账号重新登录（封禁者仅受限安全访问）即可；密码、未消费的长期恢复码、帖子、绑定、审核进度保留。回退期间 v19 新产生的帖子/回复也保留。备份用于真正灾难恢复，常规代码回退不回滚数据库时间点。
+再次升级不重复播种/覆盖数据；核对迁移与数据后清除旧会话/短期挑战并递增 epoch，用户重新登录，封禁者仅受限安全访问。账号密码、长期恢复码、帖子、审核进度和回退期间 v19 新内容都保留。普通代码回退不回滚数据库时间点。
 
-## 11. 待作者与 Claude 审核的事项
+## 11. 作者已确定事项与剩余平台证据
 
-以下不是重问已确定的功能，而是实现所需的具体边界；未确认前不写代码：
+本次决定覆盖旧设计的冲突部分，不重复请求批准：
 
-1. 是否接受 §3.2 的 100,000 次保守兼容提案及低于 OWASP 600,000 的折中；实际 Sites 若不满足所选参数/CPU条件则不开注册。
-2. 确认“前3帖”指3篇审核通过的不同主题帖，回复同审核但不累计；提前提交的第4篇仍待审。
-3. 确认本站账号注销会匿名化**当前仍绑定**的历史ChatGPT帖子；解绑后它们仍独立属于平台用户。
-4. 确认恢复码也丢失时的人工核验标准；无法证明归属时不能安全保证找回。
-5. 确认私有备份保留/注销清单政策；先落实完整备份和可恢复路径，再开放注册。
-6. 批准未来实施涉及 `identity()`、精确匿名auth分派/审核/归属判定及7张新表/0002迁移。`app/chatgpt-auth.ts` 和 `lib/guests.ts` 按本方案不改。
+1. 绑定移至二期，一期无 links 表、绑定接口或 identity 绑定分支。
+2. 先 owner-only 只读平台探针 PR，结果出来并经审核前无账号代码；测完删除探针。
+3. 600,000 次支持即使用，否则 100,000；密码最短 10 字符，不自动降到更低。
+4. 主题和回复合计三条审核通过；拒绝不计，提前第 4 条仍待审。
+5. 人工发重置码只接受仍能登录该本站账号或作者线下认识本人。
+6. 私有完整备份最多 30 天，允许随机 ID+时间注销清单；没有完整备份路径不开放注册。
+7. 已批准未来修改 identity/API 精确分派以及六表/0002；`app/chatgpt-auth.ts`、`lib/guests.ts` 不改，实施仍受探针顺序限制。
 
-平台待验证：可信真实IP来源、身份头不可由外部伪造、Sites PBKDF2参数/CPU预算、完整D1备份权限。这里列的是待完成证据，不将它们写成已有保障。
+仍缺的是**事实证据**而非作者偏好：可信访客 IP 来源及其信任边界、外部伪造身份头是否被 Sites 剥离、两档 PBKDF2 实测与资源约束、完整 D1 私有导出/恢复权限和保留期。现阶段均不能写为已验证；未知或失败项须在探针报告中明确，停下等审核，不自行绕过。
 
 ## 12. 官方来源与核对日期
 
@@ -452,19 +458,20 @@ DELETE 的密码/确认数据只放受长度限制的 JSON body，不放 URL；�
 - [S7 Cloudflare HTTP Headers](https://developers.cloudflare.com/fundamentals/reference/http-headers/)：CF-Connecting-IP与Worker子请求的不同表现。
 - [S8 OWASP Forgot Password](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)：高熵、单次、过期、限流与一致错误响应。
 - [S9 D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)：平台数据库恢复能力；本项目是否可操作仍待确认。
+- [S10 Workers Performance](https://developers.cloudflare.com/workers/runtime-apis/performance/)：计时在 I/O 时推进的运行时限制；不得把 CPU 操作期间读数不变当成操作耗时为零。
 
 ## 13. 本文交付验证
 
-仅新增本文；未写账号功能、未创建迁移文件、未运行生产SQL、未改变线上版本。本分支验证结果：
+2026-11-09 本次修订后重新验证；仅修改本设计文档，无账号功能、迁移文件或生产 SQL。线上版本不变。
 
 ```text
-node tests/run.mjs    exit 0
-pnpm build           exit 0
+node tests/run.mjs    全部 PASS
+pnpm build           exit 0；Build complete
 git diff --check     exit 0
 ```
 
-原测试实际输出：166 API checks、taxonomy 205 HTTP expectations、12 rendered preview responses、catalog rollout SSR、7 public chapters reading rollout、shared session and forum loading 均 PASS。构建输出 Build complete；保留原有 middleware 弃用与部分路由 Unknown 提示，未因此修改框架配置。
+输出包括 166 API checks、taxonomy 205 HTTP expectations、12 rendered preview responses、catalog rollout SSR、7 public chapters reading rollout、shared session and forum loading 均 PASS。构建仍有原有 middleware 弃用与部分路由 Unknown 提示。
 
-文档中的 Up/Down SQL 在临时内存 SQLite 上检查通过：7张新表、旧表数据保留、外键检查、账号从属记录级联删除、重复Up拒绝、空库Down后原schema/settings一致；没有连接生产D1。这只是DDL语法/结构验证，不代替D1迁移部署、并发事务、密码运行成本或账号功能测试。
+本次六表 Up SQL 与无账号空表 Down SQL 在临时内存 SQLite 实际执行通过：先加载现有 drizzle 结构，Up 新增恰好六张表、无 links 表，Down 后表数还原。此检查仅验证本地 SQL 语法、表数与空表撤销，不代表 D1 迁移、并发或全部安全约束已经验收。
 
-本轮复核补齐了跨窗口锁定、封禁后的受限安全登录、绑定目标快照、注销与永久封人的边界、注册开关与身份检查分离。上述均只写在方案中。**账号代码尚未实现，不能将现有测试通过写成新账号安全性已验收。**
+**账号代码尚未实现，平台探针尚无实测结果。** 现有测试通过不等于新账号安全性已验收；真实 Sites 的 IP/身份头、PBKDF2、完整 D1 导出与私有备份恢复均待探针与后续核验。
