@@ -62,4 +62,4 @@ curl.exe -s -H "oai-authenticated-user-id: probe-fake" -H "oai-authenticated-use
 
 - `lib/platform-probe.ts` 的纯函数已在 Node 22 下单独运行检查通过（地址类型识别、不回显值、迭代次数白名单、100,000 与 600,000 次派生）。
 - `tests/integration.ts` 新增权限与不写库断言：匿名 401、普通成员 403、非法次数 400、settings 前后一致、响应不含邮箱/ID/地址。
-- **`node tests/run.mjs` 和 `pnpm build` 未在编写环境运行**（无法安装依赖），合并前须由作者或 Codex 运行并报告结果。
+- 2026-11-25 在 `pnpm install --frozen-lockfile` 后运行：`node tests/run.mjs` 退出 0（175 项 API 检查，含新增 9 项探针检查；分类 205 项、样式预览、目录、阅读、会话套件全部通过）；`pnpm build` 退出 0。构建输出仍有 vinext「部分路由无法静态分类」提示，与本次改动无关。
