@@ -427,4 +427,25 @@ const concurrentDb={prepare:db.prepare.bind(db),batch:(stmts:any[])=>{
 await Promise.all([applyFifthChapterRevision(concurrentDb),applyFifthChapterRevision(concurrentDb)]);
 for(const id of releaseIds)assert.equal(sqlite.prepare('SELECT version FROM chapters WHERE id=?').get(id)!.version,2);
 assert.equal((await call('topics?chapter=practice')).items.find((t:any)=>t.id==='practice-move-topic').chapter_id,'practice');
+// Temporary platform probes: names/counts only, owner-gated diagnostics, no D1 writes.
+{
+ const settingsBefore=JSON.stringify(sqlite.prepare('SELECT key,value FROM settings ORDER BY key').all());
+ assert.deepEqual(await call('probe/headers'),{oaiHeaderNames:[],identityHeadersPresent:false});
+ const seen=await call('probe/headers','GET',null,reader);
+ assert.deepEqual(seen,{oaiHeaderNames:['oai-authenticated-user-email','oai-authenticated-user-id'],identityHeadersPresent:true});
+ assert(!JSON.stringify(seen).includes('reader@example.test')&&!JSON.stringify(seen).includes('reader-id'),'probe must not echo header values');
+ await call('admin/probe','GET',null,{},401);
+ await call('admin/probe','GET',null,reader,403);
+ await call('admin/probe/kdf?iterations=100000','GET',null,reader,403);
+ const diag=await call('admin/probe','GET',null,{...owner,'x-forwarded-for':'203.0.113.7, 10.0.0.1','cf-connecting-ip':'2001:db8::1'});
+ assert.deepEqual(diag.ip['x-forwarded-for'],{present:true,entries:2,families:['ipv4','ipv4']});
+ assert.deepEqual(diag.ip['cf-connecting-ip'],{present:true,entries:1,families:['ipv6']});
+ assert.deepEqual(diag.ip['x-real-ip'],{present:false,entries:0,families:[]});
+ assert(!JSON.stringify(diag).includes('203.0.113.7')&&!JSON.stringify(diag).includes('2001:db8'),'probe must not echo addresses');
+ await call('admin/probe/kdf?iterations=1000','GET',null,owner,400);
+ await call('admin/probe/kdf','GET',null,owner,400);
+ const kdf=await call('admin/probe/kdf?iterations=100000','GET',null,owner);
+ assert.equal(kdf.ok,true);assert.equal(kdf.iterations,100000);assert.equal(kdf.derivedBytes,32);
+ assert.equal(JSON.stringify(sqlite.prepare('SELECT key,value FROM settings ORDER BY key').all()),settingsBefore,'probes must not write settings');
+}
 console.log('PASS: '+checks+' API checks; owner/member/guest permissions, pending visibility, moderation, signed cookies, rate limits, atomic content migration, chapters/media, legacy-image projection, preview isolation and write guards.');
