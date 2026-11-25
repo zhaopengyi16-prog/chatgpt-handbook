@@ -7,6 +7,7 @@ import { isLegacyImageUrl } from '@/lib/legacy-image-url';
 import { adminTaxonomy, mutateTaxonomy, readTaxonomy, TaxonomyError } from '@/lib/taxonomy';
 import { TAXONOMY_KEY } from '@/lib/taxonomy-types';
 import { adminChaptersWithTags, saveChapterWithTags } from '@/lib/chapter-taxonomy-write';
+import { headerProbe, ipProbe, kdfProbe, parseKdfIterations } from '@/lib/platform-probe';
 export const dynamic = 'force-dynamic';
 class HttpError extends Error { constructor(public status:number, message:string) { super(message); } }
 function fail(status:number,message:string): never { throw new HttpError(status,message); }
@@ -54,6 +55,16 @@ async function handle(req:Request, parts:string[]) {
     const response=json({user});
     if(!user) { const cookie=await guestCookie(req); if(cookie) response.headers.set('Set-Cookie',cookie); }
     return response;
+  }
+  // Temporary read-only platform probes (docs/ACCOUNTS_DESIGN.md phase-one gate).
+  // They run after every existing check above, return header names/counts only,
+  // and never touch D1. Remove after the results are recorded.
+  if(parts[0]==='probe' && parts[1]==='headers' && parts.length===2 && method==='GET') return json(headerProbe(req.headers));
+  if(adminPath && parts[1]==='probe' && parts.length===2 && method==='GET') return json({ip:ipProbe(req.headers),headers:headerProbe(req.headers)});
+  if(adminPath && parts[1]==='probe' && parts[2]==='kdf' && parts.length===3 && method==='GET') {
+    const iterations=parseKdfIterations(url.searchParams.get('iterations'));
+    if(iterations===null) fail(400,'iterations 只能是 100000 或 600000。');
+    return json(await kdfProbe(iterations));
   }
   if(parts[0]==='chapters' && parts.length===1 && method==='GET') return json({items:await publicChapters()});
   if(taxonomyPath && parts.length===2) {
